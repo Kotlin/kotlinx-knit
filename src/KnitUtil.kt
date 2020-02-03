@@ -18,3 +18,5 @@ fun <T : LineNumberReader> File.withLineNumberReader(factory: (Reader) -> T, blo
     }
     return reader
 }
+
+operator fun File.div(path: String): File = File(this, path.replace("/", File.separator))

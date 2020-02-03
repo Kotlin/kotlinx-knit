@@ -240,12 +240,17 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 MODULE_DIRECTIVE -> {
                     requireSingleLine(directive)
                     moduleName = directive.param
-                    docsRoot = findModuleRootDir(moduleName) + "/" + moduleDocs + "/" + moduleName
+                    docsRoot = findModuleRoot(moduleName) + "/" + moduleDocs + "/" + moduleName
                 }
                 INDEX_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(siteRoot != null) { "Missing 'siteRoot' in knit configuration, cannot do $INDEX_DIRECTIVE" }
-                    val indexLines = api.processApiIndex("$siteRoot/$moduleName", docsRoot, directive.param, remainingApiRefNames)
+                    val indexLines = api.processApiIndex(
+                        "$siteRoot/$moduleName",
+                        rootDir, docsRoot,
+                        directive.param,
+                        remainingApiRefNames
+                    )
                         ?: throw IllegalArgumentException("Failed to load index for ${directive.param}")
                     if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")
                 }
@@ -541,8 +546,8 @@ fun writeLines(file: File, lines: List<String>) {
     }
 }
 
-fun KnitContext.findModuleRootDir(name: String): String =
+fun KnitContext.findModuleRoot(name: String): String =
     moduleRoots
         .map { "$it/$name" }
-        .firstOrNull { dir -> moduleMarkers.any { File("$dir/$it").exists() } }
+        .firstOrNull { dir -> moduleMarkers.any { (rootDir / "$dir/$it").exists() } }
         ?: throw IllegalArgumentException("Module $name is not found in any of the module root dirs")

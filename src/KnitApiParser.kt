@@ -16,10 +16,10 @@ class ApiIndexCache {
     val apiIndexCache = HashMap<ApiIndexKey, Map<String, List<String>>>()
 }
 
+const val INDEX_HTML = "/index.html"
+const val INDEX_MD = "/index.md"
+const val FUNCTIONS_SECTION_HEADER = "### Functions"
 val REF_LINE_REGEX = Regex("<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>")
-val INDEX_HTML = "/index.html"
-val INDEX_MD = "/index.md"
-val FUNCTIONS_SECTION_HEADER = "### Functions"
 
 private fun HashMap<String, MutableList<String>>.putUnambiguous(key: String, value: String) {
     val oldValue = this[key]
@@ -32,6 +32,7 @@ private fun HashMap<String, MutableList<String>>.putUnambiguous(key: String, val
 }
 
 private fun loadApiIndex(
+    rootDir: File,
     docsRoot: String,
     path: String,
     pkg: String,
@@ -41,7 +42,7 @@ private fun loadApiIndex(
     val visited = mutableSetOf<String>()
     val map = HashMap<String, MutableList<String>>()
     var inFunctionsSection = false
-    File(fileName).withLineNumberReader(::LineNumberReader) {
+    (rootDir / fileName).withLineNumberReader(::LineNumberReader) {
         while (true) {
             val line = readLine() ?: break
             if (line == FUNCTIONS_SECTION_HEADER) inFunctionsSection = true
@@ -70,7 +71,7 @@ private fun loadApiIndex(
             if (link.endsWith(INDEX_HTML)) {
                 if (visited.add(link)) {
                     val path2 = path + "/" + link.substring(0, link.length - INDEX_HTML.length)
-                    map += loadApiIndex(docsRoot, path2, pkg, "$refName.")
+                    map += loadApiIndex(rootDir, docsRoot, path2, pkg, "$refName.")
                         ?: throw IllegalArgumentException("Failed to parse $docsRoot/$path2")
                 }
             }
@@ -81,17 +82,18 @@ private fun loadApiIndex(
 
 fun ApiIndexCache.processApiIndex(
     siteRoot: String,
+    rootDir: File,
     docsRoot: String,
     pkg: String,
     remainingApiRefNames: MutableSet<String>
 ): List<String>? {
     val key = ApiIndexKey(docsRoot, pkg)
-    val map = apiIndexCache.getOrPut(key, {
+    val map = apiIndexCache.getOrPut(key) {
         print("Parsing API docs at $docsRoot/$pkg: ")
-        val result = loadApiIndex(docsRoot, pkg, pkg) ?: return null // null on failure
+        val result = loadApiIndex(rootDir, docsRoot, pkg, pkg) ?: return null // null on failure
         println("${result.size} definitions")
         result
-    })
+    }
     val indexList = arrayListOf<String>()
     val it = remainingApiRefNames.iterator()
     while (it.hasNext()) {
