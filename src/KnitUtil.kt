@@ -7,12 +7,13 @@ package kotlinx.knit
 import java.io.*
 
 fun <T : LineNumberReader> File.withLineNumberReader(factory: (Reader) -> T, block: T.() -> Unit): T? {
+    val file = this
     val reader = factory(reader())
     reader.use {
         try {
             it.block()
         } catch (e: Exception) {
-            println("ERROR: ${this@withLineNumberReader}: ${it.lineNumber}: ${e.message}")
+            log.error("ERROR: $file: ${it.lineNumber}: ${e.message}", e)
             return null
         }
     }

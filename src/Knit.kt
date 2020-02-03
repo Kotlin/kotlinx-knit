@@ -85,6 +85,7 @@ fun main(args: Array<String>) {
         println("Usage: Knit <markdown-files>")
         exitProcess(1)
     }
+    log = SimpleLog()
     val ctx = createDefaultContext(args.map { File(it) })
     if (!ctx.process()) exitProcess(2)
 }
@@ -144,7 +145,7 @@ class KnitRef(val pkg: String, val name: String) {
 }
 
 fun KnitContext.knit(markdownFile: File): Boolean {
-    println("*** Reading $markdownFile")
+    log.info("*** Reading $markdownFile")
     val props = markdownFile.findProps(rootDir)
     val knit = props.knitConfig()
     val knitAutonumberIndex = HashMap<String, Int>()
@@ -309,7 +310,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 val file = File(markdownFile.parentFile, path)
                 require(files.add(file)) { "Duplicate file: $file"}
-                println("Knitting $file ...")
+                log.info("Knitting $file ...")
                 val outLines = arrayListOf<String>()
                 val fileIncludes = arrayListOf<Include>()
                 // load & process template of the main include
@@ -346,7 +347,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     // check apiRefs
     for (apiRef in allApiRefs) {
         if (apiRef.name in remainingApiRefNames) {
-            println("WARNING: $markdownFile: ${apiRef.line}: Broken reference to [${apiRef.name}]")
+            log.warn("WARNING: $markdownFile: ${apiRef.line}: Broken reference to [${apiRef.name}]")
         }
     }
     // write test output
@@ -420,7 +421,7 @@ private fun flushTestOut(file: File, props: KnitProps, testName: String?, testOu
     lines += testOutLines
     lines += "}"
     val testFile = File(props.getFile(TEST_DIR_PROP), "$testName.kt")
-    println("Checking $testFile")
+    log.info("Checking $testFile")
     writeLinesIfNeeded(testFile, lines)
     testOutLines.clear()
 }
@@ -539,7 +540,7 @@ fun writeLinesIfNeeded(file: File, outLines: List<String>) {
 }
 
 fun writeLines(file: File, lines: List<String>) {
-    println(" Writing $file ...")
+    log.info(" Writing $file ...")
     file.parentFile?.mkdirs()
     file.printWriter().use { out ->
         lines.forEach { out.println(it) }

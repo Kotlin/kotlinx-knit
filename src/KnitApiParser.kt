@@ -89,9 +89,8 @@ fun ApiIndexCache.processApiIndex(
 ): List<String>? {
     val key = ApiIndexKey(docsRoot, pkg)
     val map = apiIndexCache.getOrPut(key) {
-        print("Parsing API docs at $docsRoot/$pkg: ")
         val result = loadApiIndex(rootDir, docsRoot, pkg, pkg) ?: return null // null on failure
-        println("${result.size} definitions")
+        log.info("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
     }
     val indexList = arrayListOf<String>()
