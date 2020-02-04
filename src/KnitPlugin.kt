@@ -9,30 +9,54 @@ import org.gradle.api.file.*
 import org.gradle.api.tasks.*
 import java.io.*
 
+const val TASK_GROUP = "documentation"
+
 class KnitPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
         extensions.create("knit", KnitPluginExtension::class.java)
-        tasks.register("knit", KnitTask::class.java)
+        val knitPrepare = tasks.register("knitPrepare", DefaultTask::class.java) {
+            it.description =  "Prepares dependencies for Knit tool"
+            it.group = TASK_GROUP
+        }
+        val knitCheck = tasks.register("knitCheck", KnitTask::class.java) {
+            it.description = "Runs Knit tool check (does not modify anything)"
+            it.group = TASK_GROUP
+            it.check = true
+            it.dependsOn(knitPrepare)
+        }
+        tasks.register("knit", KnitTask::class.java) {
+            it.description = "Runs Knit tool"
+            it.group = TASK_GROUP
+            it.dependsOn(knitPrepare)
+        }
+        tasks.register("check") {
+            it.dependsOn(knitCheck)
+        }
     }
 }
 
 open class KnitTask : DefaultTask() {
-    init {
-        description = "Runs knit tool"
-    }
-
     private val ext: KnitPluginExtension = project.extensions.getByType(KnitPluginExtension::class.java)
+
+    @Input
+    var check: Boolean = false
 
     @Input
     var rootDir: File = ext.rootDir ?: project.rootDir
 
     @InputFiles
-    var files: FileCollection = ext.files ?: project.files("*.md")
+    var files: FileCollection = ext.files ?: project.fileTree(project.rootDir) {
+        it.include("**/*.md")
+        it.exclude("**/build/*")
+        it.exclude("**/.gradle/*")
+    }
 
     @TaskAction
     fun knit() {
-        val ctx = ext.createContext(files.files, rootDir)
-        if (!ctx.process()) throw GradleException("Knit failed, see log for details")
+        val ctx = ext.createContext(files.files, rootDir, check)
+        if (!ctx.process() || check && ctx.log.hasWarningOrError) {
+            throw GradleException("$name task failed, see log for details")
+        }
     }
 }
 
@@ -44,12 +68,14 @@ open class KnitPluginExtension {
     var files: FileCollection? = null
     var rootDir: File? = null
 
-    fun createContext(files: Collection<File>, rootDir: File) = KnitContext(
+    fun createContext(files: Collection<File>, rootDir: File, check: Boolean) = KnitContext(
+        log = LoggerLog(),
         siteRoot = siteRoot,
         moduleRoots = moduleRoots,
         moduleMarkers = moduleMarkers,
         moduleDocs =  moduleDocs,
         files = files,
-        rootDir = rootDir
+        rootDir = rootDir,
+        check = check
     )
 }

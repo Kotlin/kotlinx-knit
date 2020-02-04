@@ -6,21 +6,40 @@ package kotlinx.knit
 
 import org.slf4j.*
 
-var log: KnitLog = object : KnitLog {
-    val logger: Logger by lazy { LoggerFactory.getLogger("knit") }
-    override fun info(s: String) = logger.info(s)
-    override fun warn(s: String) = logger.warn(s)
-    override fun error(s: String, e: Exception) = logger.error(s)
+sealed class KnitLog {
+    var hasWarningOrError = false
+    abstract fun info(s: String)
+    abstract fun warn(s: String)
+    abstract fun error(s: String, e: Exception)
 }
 
-interface KnitLog {
-    fun info(s: String)
-    fun warn(s: String)
-    fun error(s: String, e: Exception)
+class ConsoleLog : KnitLog() {
+    override fun info(s: String) {
+        println(s)
+    }
+
+    override fun warn(s: String) {
+        println(s)
+        hasWarningOrError = true
+    }
+
+    override fun error(s: String, e: Exception) = warn(s)
 }
 
-class SimpleLog : KnitLog {
-    override fun info(s: String) = println(s)
-    override fun warn(s: String) = println(s)
-    override fun error(s: String, e: Exception) = println(s)
+class LoggerLog : KnitLog() {
+    private val logger: Logger by lazy { LoggerFactory.getLogger("knit") }
+
+    override fun info(s: String) {
+        logger.info(s)
+    }
+
+    override fun warn(s: String) {
+        logger.warn(s)
+        hasWarningOrError = true
+    }
+
+    override fun error(s: String, e: Exception) {
+        logger.error(s)
+        hasWarningOrError = true
+    }
 }

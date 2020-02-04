@@ -12,10 +12,6 @@ data class ApiIndexKey(
     val pkg: String
 )
 
-class ApiIndexCache {
-    val apiIndexCache = HashMap<ApiIndexKey, Map<String, List<String>>>()
-}
-
 const val INDEX_HTML = "/index.html"
 const val INDEX_MD = "/index.md"
 const val FUNCTIONS_SECTION_HEADER = "### Functions"
@@ -31,8 +27,7 @@ private fun HashMap<String, MutableList<String>>.putUnambiguous(key: String, val
     }
 }
 
-private fun loadApiIndex(
-    rootDir: File,
+private fun KnitContext.loadApiIndex(
     docsRoot: String,
     path: String,
     pkg: String,
@@ -42,7 +37,7 @@ private fun loadApiIndex(
     val visited = mutableSetOf<String>()
     val map = HashMap<String, MutableList<String>>()
     var inFunctionsSection = false
-    (rootDir / fileName).withLineNumberReader(::LineNumberReader) {
+    withLineNumberReader(rootDir / fileName, ::LineNumberReader) {
         while (true) {
             val line = readLine() ?: break
             if (line == FUNCTIONS_SECTION_HEADER) inFunctionsSection = true
@@ -71,7 +66,7 @@ private fun loadApiIndex(
             if (link.endsWith(INDEX_HTML)) {
                 if (visited.add(link)) {
                     val path2 = path + "/" + link.substring(0, link.length - INDEX_HTML.length)
-                    map += loadApiIndex(rootDir, docsRoot, path2, pkg, "$refName.")
+                    map += loadApiIndex(docsRoot, path2, pkg, "$refName.")
                         ?: throw IllegalArgumentException("Failed to parse $docsRoot/$path2")
                 }
             }
@@ -80,16 +75,15 @@ private fun loadApiIndex(
     return map
 }
 
-fun ApiIndexCache.processApiIndex(
+fun KnitContext.processApiIndex(
     siteRoot: String,
-    rootDir: File,
     docsRoot: String,
     pkg: String,
     remainingApiRefNames: MutableSet<String>
 ): List<String>? {
     val key = ApiIndexKey(docsRoot, pkg)
     val map = apiIndexCache.getOrPut(key) {
-        val result = loadApiIndex(rootDir, docsRoot, pkg, pkg) ?: return null // null on failure
+        val result = loadApiIndex(docsRoot, pkg, pkg) ?: return null // null on failure
         log.info("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
     }

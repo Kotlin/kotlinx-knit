@@ -63,29 +63,11 @@ val LINK_DEF_REGEX = Regex("^\\[([A-Za-z0-9_().]+)]: .*")
 
 // ----------------------------------------------------
 
-class KnitContext(
-    // the global configuration from knit { ... } DSL
-    val siteRoot: String?, // only needed for INDEX directive
-    val moduleRoots: List<String>,
-    val moduleMarkers: List<String>,
-    val moduleDocs: String,
-    // files to process
-    files: Collection<File>,
-    val rootDir: File
-) {
-    // state
-    val tocRefMap = HashMap<File, List<TocRef>>()
-    val fileSet = HashSet(files)
-    val fileQueue = ArrayDeque(files)
-    val api = ApiIndexCache()
-}
-
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("Usage: Knit <markdown-files>")
         exitProcess(1)
     }
-    log = SimpleLog()
     val ctx = createDefaultContext(args.map { File(it) })
     if (!ctx.process()) exitProcess(2)
 }
@@ -146,7 +128,7 @@ class KnitRef(val pkg: String, val name: String) {
 
 fun KnitContext.knit(markdownFile: File): Boolean {
     log.info("*** Reading $markdownFile")
-    val props = markdownFile.findProps(rootDir)
+    val props = findProps(markdownFile, rootDir)
     val knit = props.knitConfig()
     val knitAutonumberIndex = HashMap<String, Int>()
     val tocLines = arrayListOf<String>()
@@ -164,7 +146,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     var retryKnitLater = false
     val tocRefs = ArrayList<TocRef>().also { tocRefMap[markdownFile] = it }
     // read markdown file
-    val markdown = markdownFile.withMarkdownTextReader {
+    val markdown = withMarkdownTextReader(markdownFile) {
         mainLoop@ while (true) {
             val inLine = readLine() ?: break
             val directive = directive(inLine)
@@ -246,11 +228,8 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 INDEX_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(siteRoot != null) { "Missing 'siteRoot' in knit configuration, cannot do $INDEX_DIRECTIVE" }
-                    val indexLines = api.processApiIndex(
-                        "$siteRoot/$moduleName",
-                        rootDir, docsRoot,
-                        directive.param,
-                        remainingApiRefNames
+                    val indexLines = processApiIndex(
+                        "$siteRoot/$moduleName", docsRoot, directive.param, remainingApiRefNames
                     )
                         ?: throw IllegalArgumentException("Failed to load index for ${directive.param}")
                     if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")
@@ -413,7 +392,7 @@ class TestTemplateEnv(
     val test = props.getMap("test") + mapOf("name" to testName)
 }
 
-private fun flushTestOut(file: File, props: KnitProps, testName: String?, testOutLines: MutableList<String>) {
+private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: String?, testOutLines: MutableList<String>) {
     if (testOutLines.isEmpty()) return
     if (testName == null) return
     val lines = arrayListOf<String>()
@@ -527,19 +506,28 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
     }
 }
 
-fun File.withMarkdownTextReader(block: MarkdownTextReader.() -> Unit): MarkdownTextReader? =
-    withLineNumberReader(::MarkdownTextReader, block)
+fun KnitContext.withMarkdownTextReader(file: File, block: MarkdownTextReader.() -> Unit): MarkdownTextReader? =
+    withLineNumberReader(file, ::MarkdownTextReader, block)
 
-fun writeLinesIfNeeded(file: File, outLines: List<String>) {
+private const val TEAR_LINE: String = "-------------------------------------------"
+
+fun KnitContext.writeLinesIfNeeded(file: File, outLines: List<String>) {
     val oldLines = try {
         file.readLines()
     } catch (e: IOException) {
         emptyList<String>()
     }
-    if (outLines != oldLines) writeLines(file, outLines)
+    if (outLines != oldLines) {
+        if (check) {
+            val diff = formatDiff(oldLines, outLines)
+            log.warn("WARNING: $file: is not up-to-date, difference is:\n$TEAR_LINE\n$diff\n$TEAR_LINE")
+        } else {
+            writeLines(file, outLines)
+        }
+    }
 }
 
-fun writeLines(file: File, lines: List<String>) {
+fun KnitContext.writeLines(file: File, lines: List<String>) {
     log.info(" Writing $file ...")
     file.parentFile?.mkdirs()
     file.printWriter().use { out ->

@@ -18,6 +18,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(gradleApi())
     implementation("org.freemarker:freemarker:2.3.29")
+    testImplementation(kotlin("test-junit"))
 }
 
 publishing {

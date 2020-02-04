@@ -15,12 +15,14 @@ private val globalProperties = KnitProps()
 fun createDefaultContext(files: List<File>): KnitContext =
     with(globalProperties) {
         KnitContext(
+            log = ConsoleLog(),
             siteRoot = getValue("site.root"),
             moduleRoots = getValue("module.roots").split(","),
             moduleMarkers = getValue("module.markers").split(","),
             moduleDocs = getValue("module.docs"),
             files = files,
-            rootDir = File(System.getProperty("user.dir"))
+            rootDir = File(System.getProperty("user.dir")),
+            check = false
         )
     }
 
@@ -66,18 +68,16 @@ class KnitProps(
     }
 }
 
-fun File.findProps(rootDir: File): KnitProps =
-    absoluteFile.parentFile?.findDirProps(rootDir.absolutePath) ?: globalProperties
+fun KnitContext.findProps(file: File, rootDir: File): KnitProps =
+    findDirProps(file.absoluteFile.parentFile, rootDir.absolutePath)
 
-private val propsCache = HashMap<File, KnitProps>()
-
-private fun File.findDirProps(rootPath: String): KnitProps {
-    if (!path.startsWith(rootPath)) return globalProperties
-    propsCache[this]?.let { return it }
-    val propFile = File(this, KNIT_PROPERTIES)
-    if (!propFile.exists()) return parentFile.findDirProps(rootPath)
-    val props = KnitProps(DirectoryProps(this), parentFile?.findDirProps(rootPath))
-    propsCache[this] = props
+private fun KnitContext.findDirProps(dir: File?, rootPath: String): KnitProps {
+    if (dir == null || !dir.path.startsWith(rootPath)) return globalProperties
+    propsCache[dir]?.let { return it }
+    val propFile = File(dir, KNIT_PROPERTIES)
+    if (!propFile.exists()) return findDirProps(dir.parentFile, rootPath)
+    val props = KnitProps(DirectoryProps(dir), findDirProps(dir.parentFile, rootPath))
+    propsCache[dir] = props
     return props
 }
 
