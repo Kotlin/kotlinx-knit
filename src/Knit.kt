@@ -515,17 +515,30 @@ fun KnitContext.writeLinesIfNeeded(file: File, outLines: List<String>) {
     val oldLines = try {
         file.readLines()
     } catch (e: IOException) {
-        emptyList<String>()
+        null
     }
     if (outLines != oldLines) {
         if (check) {
-            val diff = formatDiff(oldLines, outLines)
-            log.warn("WARNING: $file: is not up-to-date, difference is:\n$TEAR_LINE\n$diff\n$TEAR_LINE")
+            val text = formatOutdated(oldLines, outLines)
+            log.outdated("WARNING: $file: $text")
         } else {
             writeLines(file, outLines)
         }
     }
 }
+
+private fun formatOutdated(oldLines: List<String>?, outLines: List<String>) =
+    if (oldLines == null)
+        "is missing"
+    else {
+        val diff = formatDiff(oldLines, outLines)
+        val desc =
+            if (diff == null)
+                " too big to show"
+            else
+                "\n$TEAR_LINE\n$diff\n$TEAR_LINE"
+        "is not up-to-date, difference is$desc"
+    }
 
 fun KnitContext.writeLines(file: File, lines: List<String>) {
     log.info(" Writing $file ...")

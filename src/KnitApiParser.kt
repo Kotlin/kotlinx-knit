@@ -84,7 +84,7 @@ fun KnitContext.processApiIndex(
     val key = ApiIndexKey(docsRoot, pkg)
     val map = apiIndexCache.getOrPut(key) {
         val result = loadApiIndex(docsRoot, pkg, pkg) ?: return null // null on failure
-        log.info("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
+        log.debug("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
     }
     val indexList = arrayListOf<String>()

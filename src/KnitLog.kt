@@ -8,12 +8,24 @@ import org.slf4j.*
 
 sealed class KnitLog {
     var hasWarningOrError = false
+    var nOutdated = 0
+
+    abstract fun debug(s: String)
     abstract fun info(s: String)
     abstract fun warn(s: String)
     abstract fun error(s: String, e: Exception)
+
+    fun outdated(s: String) {
+        warn(s)
+        nOutdated++
+    }
 }
 
 class ConsoleLog : KnitLog() {
+    override fun debug(s: String) {
+        // no debug output to console
+    }
+
     override fun info(s: String) {
         println(s)
     }
@@ -28,6 +40,10 @@ class ConsoleLog : KnitLog() {
 
 class LoggerLog : KnitLog() {
     private val logger: Logger by lazy { LoggerFactory.getLogger("knit") }
+
+    override fun debug(s: String) {
+        logger.debug(s)
+    }
 
     override fun info(s: String) {
         logger.info(s)

@@ -55,7 +55,11 @@ open class KnitTask : DefaultTask() {
     fun knit() {
         val ctx = ext.createContext(files.files, rootDir, check)
         if (!ctx.process() || check && ctx.log.hasWarningOrError) {
-            throw GradleException("$name task failed, see log for details")
+            val extra = if (ctx.log.nOutdated > 0)
+                "\nRun 'knit' task to write ${ctx.log.nOutdated} missing/outdated files."
+            else
+                ""
+            throw GradleException("$name task failed, see log for details (use '--info' for detailed log).$extra")
         }
     }
 }

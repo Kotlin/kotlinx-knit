@@ -5,6 +5,7 @@
 package kotlinx.knit
 
 import org.junit.Test
+import kotlin.random.*
 import kotlin.test.*
 
 class DiffTest {
@@ -224,5 +225,20 @@ class DiffTest {
             > to this document.
         """.trimIndent()
         assertEquals(expectedDiff, formatDiff(oldLines, newLines))
+    }
+
+    @Test
+    fun testBigDiffNull() {
+        val n = 100_000
+        val k = 10
+        val rnd = Random(1)
+        fun rndLines() = List(n) {
+            buildString {
+                repeat(k) { append('a' + rnd.nextInt(26)) }
+            }
+        }
+        val oldLines = rndLines()
+        val newLines = rndLines()
+        assertNull(formatDiff(oldLines, newLines))
     }
 }

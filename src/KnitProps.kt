@@ -76,7 +76,9 @@ private fun KnitContext.findDirProps(dir: File?, rootPath: String): KnitProps {
     propsCache[dir]?.let { return it }
     val propFile = File(dir, KNIT_PROPERTIES)
     if (!propFile.exists()) return findDirProps(dir.parentFile, rootPath)
-    val props = KnitProps(DirectoryProps(dir), findDirProps(dir.parentFile, rootPath))
+    val parent = findDirProps(dir.parentFile, rootPath)
+    log.debug("Loading properties from $propFile")
+    val props = KnitProps(DirectoryProps(dir), parent)
     propsCache[dir] = props
     return props
 }

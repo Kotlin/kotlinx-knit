@@ -7,8 +7,10 @@ package kotlinx.knit
 import kotlin.math.*
 import kotlin.properties.*
 
-fun formatDiff(oldLines: List<String>, newLines: List<String>): String {
-    val diff = computeDiff(oldLines, newLines)
+const val DIFF_LIMIT = 100
+
+fun formatDiff(oldLines: List<String>, newLines: List<String>, limit: Int = DIFF_LIMIT): String? {
+    val diff = computeDiff(oldLines, newLines, limit) ?: return null
     val out = ArrayList<String>(diff.size * 2)
     var pOp: DiffOp? = null
     var pPos = 0
@@ -57,7 +59,7 @@ private fun formatHeader(d1: Diff, d2: Diff): String {
 private fun formatRange(x1: Int, x2: Int): String =
     if (x1 == x2) x1.toString() else "$x1,$x2"
 
-private fun computeDiff(xs: List<String>, ys: List<String>): List<Diff> {
+private fun computeDiff(xs: List<String>, ys: List<String>, limit: Int): List<Diff>? {
     // trim common prefix
     val maxPre = min(xs.size, ys.size)
     var pre = 0
@@ -67,18 +69,18 @@ private fun computeDiff(xs: List<String>, ys: List<String>): List<Diff> {
     val maxSuf = maxPre - pre
     while (suf < maxSuf && xs[xs.size - 1 - suf] == ys[ys.size - 1 - suf]) suf++
     // compute diff
-    return computeDiffImpl(xs, pre, xs.size - suf, ys, pre, ys.size - suf)
+    return computeDiffImpl(xs, pre, xs.size - suf, ys, pre, ys.size - suf, limit)
 }
 
 // An O(ND) Difference Algorithm and Its Variations* EUGENE W. MYERS, Greedy algorithm
-private fun computeDiffImpl(xs: List<String>, x1: Int, x2: Int, ys: List<String>, y1: Int, y2: Int): List<Diff> {
+private fun computeDiffImpl(xs: List<String>, x1: Int, x2: Int, ys: List<String>, y1: Int, y2: Int, limit: Int): List<Diff>? {
     val xl = x2 - x1
     val yl = y2 - y1
     // fast paths
-    if (xl == 0) return (y1 until y2).map { y -> Diff(x1 - 1, y, DiffOp.INSERT, ys[y]) }
-    if (yl == 0) return (x1 until x2).map { x -> Diff(x, y1 - 1, DiffOp.DELETE, xs[x]) }
+    if (xl == 0) return if (yl <= limit) (y1 until y2).map { y -> Diff(x1 - 1, y, DiffOp.INSERT, ys[y]) } else null
+    if (yl == 0) return if (xl <= limit) (x1 until x2).map { x -> Diff(x, y1 - 1, DiffOp.DELETE, xs[x]) } else null
     // full algo
-    val mx = xl + yl
+    val mx = min(xl + yl, limit)
     val kd = y1 - x1
     val vs = ArrayList<IntArray>(mx + 1)
     var vp = IntArray(1)
@@ -105,7 +107,7 @@ private fun computeDiffImpl(xs: List<String>, x1: Int, x2: Int, ys: List<String>
         }
         vp = vd
     }
-    error("This cannot happen")
+    return null // not found
 }
 
 private fun buildDiff(xs: List<String>, x1: Int, ys: List<String>, y1: Int, d0: Int, k0: Int, vs: ArrayList<IntArray>): List<Diff> {
