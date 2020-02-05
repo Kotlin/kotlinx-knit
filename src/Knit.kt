@@ -68,9 +68,10 @@ fun main(args: Array<String>) {
         println("Usage: Knit <markdown-files>")
         exitProcess(1)
     }
-    val ctx = createDefaultContext(args.map { File(it) })
-    if (!ctx.process()) exitProcess(2)
+    if (!runKnit(args.map { File(it) })) exitProcess(2)
 }
+
+fun runKnit(files: List<File>): Boolean = createDefaultContext(files).process()
 
 fun KnitContext.process(): Boolean {
     while (!fileQueue.isEmpty()) {
@@ -509,8 +510,6 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
 fun KnitContext.withMarkdownTextReader(file: File, block: MarkdownTextReader.() -> Unit): MarkdownTextReader? =
     withLineNumberReader(file, ::MarkdownTextReader, block)
 
-private const val TEAR_LINE: String = "-------------------------------------------"
-
 fun KnitContext.writeLinesIfNeeded(file: File, outLines: List<String>) {
     val oldLines = try {
         file.readLines()
@@ -531,13 +530,8 @@ private fun formatOutdated(oldLines: List<String>?, outLines: List<String>) =
     if (oldLines == null)
         "is missing"
     else {
-        val diff = formatDiff(oldLines, outLines)
-        val desc =
-            if (diff == null)
-                " too big to show"
-            else
-                "\n$TEAR_LINE\n$diff\n$TEAR_LINE"
-        "is not up-to-date, difference is$desc"
+        val msg = diffErrorMessage(formatDiff(oldLines, outLines))
+        "is not up-to-date, $msg"
     }
 
 fun KnitContext.writeLines(file: File, lines: List<String>) {

@@ -7,7 +7,14 @@ package kotlinx.knit
 import kotlin.math.*
 import kotlin.properties.*
 
-const val DIFF_LIMIT = 100
+private const val DIFF_LIMIT = 100
+private const val TEAR_LINE: String = "-------------------------------------------"
+
+fun diffErrorMessage(diff: String?): String = if (diff == null)
+    "difference is too big to show"
+else
+    "difference is\n$TEAR_LINE\n$diff\n$TEAR_LINE"
+
 
 fun formatDiff(oldLines: List<String>, newLines: List<String>, limit: Int = DIFF_LIMIT): String? {
     val diff = computeDiff(oldLines, newLines, limit) ?: return null

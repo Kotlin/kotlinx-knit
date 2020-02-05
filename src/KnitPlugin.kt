@@ -66,9 +66,9 @@ open class KnitTask : DefaultTask() {
 
 open class KnitPluginExtension {
     var siteRoot: String? = null
-    var moduleRoots: List<String> = listOf(".")
-    var moduleMarkers: List<String> = listOf("build.gradle", "build.gradle.kts")
-    var moduleDocs: String = "build/dokka"
+    var moduleRoots: List<String> = defaultModuleRoots
+    var moduleMarkers: List<String> = defaultModuleMarkers
+    var moduleDocs: String = defaultModuleDocs
     var files: FileCollection? = null
     var rootDir: File? = null
 

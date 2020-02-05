@@ -1,0 +1,4 @@
+// SOURCE FILE NAME: ${file.name}
+package ${knit.package}.${knit.name}
+
+import kotlin.system.* // extra

@@ -10,21 +10,23 @@ import java.util.*
 
 const val KNIT_PROPERTIES = "knit.properties"
 
-private val globalProperties = KnitProps()
+val globalProperties = KnitProps() // from bundled resources
 
-fun createDefaultContext(files: List<File>): KnitContext =
-    with(globalProperties) {
-        KnitContext(
-            log = ConsoleLog(),
-            siteRoot = getValue("site.root"),
-            moduleRoots = getValue("module.roots").split(","),
-            moduleMarkers = getValue("module.markers").split(","),
-            moduleDocs = getValue("module.docs"),
-            files = files,
-            rootDir = File(System.getProperty("user.dir")),
-            check = false
-        )
-    }
+val defaultSiteRoot = globalProperties.getValue("site.root")
+val defaultModuleRoots = globalProperties.getValue("module.roots").split(",")
+val defaultModuleMarkers = globalProperties.getValue("module.markers").split(",")
+val defaultModuleDocs = globalProperties.getValue("module.docs")
+
+fun createDefaultContext(files: List<File>) = KnitContext(
+    log = ConsoleLog(),
+    siteRoot = defaultSiteRoot,
+    moduleRoots = defaultModuleRoots,
+    moduleMarkers = defaultModuleMarkers,
+    moduleDocs = defaultModuleDocs,
+    files = files,
+    rootDir = File(System.getProperty("user.dir")),
+    check = false
+)
 
 class KnitProps(
     private val location: PropsLocation = ResourcesProps,
