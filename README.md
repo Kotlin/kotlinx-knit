@@ -1,5 +1,9 @@
 # Knit tool
 
+[![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
+[![Apache license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Download](https://api.bintray.com/packages/kotlin/kotlinx/kotlinx-knit/images/download.svg) ](https://bintray.com/kotlin/kotlinx/kotlinx-knit/_latestVersion)
+
 Kotlin source code documentation management tool.
 
 This is a tool that produces Kotlin source example files and tests from markdown documents
