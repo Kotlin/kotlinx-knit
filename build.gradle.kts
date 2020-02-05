@@ -3,23 +3,38 @@
  */
 
 import kotlinx.knit.build.*
-import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm")
     `maven-publish`
 }
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
+
+val freemarkerVersion: String by project
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(gradleApi())
-    implementation("org.freemarker:freemarker:2.3.29")
+    implementation("org.freemarker:freemarker:$freemarkerVersion")
     testImplementation(kotlin("test-junit"))
+}
+
+sourceSets {
+    main.kotlin.dir = "src"
+    test.kotlin.dir = "test"
+    main.resources.dir = "resources"
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.apply {
+        languageVersion = "1.3"
+        jvmTarget = "1.8"
+        allWarningsAsErrors = true
+    }
 }
 
 publishing {
@@ -28,19 +43,5 @@ publishing {
             from(components["java"])
             mavenCentralMetadata()
         }
-    }
-}
-
-for ((name, dir) in mapOf("main" to "src", "test" to "test")) {
-    sourceSets[name].withConvention(KotlinSourceSet::class) { kotlin.srcDirs(dir) }
-}
-
-sourceSets["main"].resources.srcDirs("resources")
-
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.apply {
-        languageVersion = "1.3"
-        jvmTarget = "1.8"
-        allWarningsAsErrors = true
     }
 }

@@ -3,3 +3,15 @@
  */
 
 rootProject.name = "kotlinx-knit"
+
+val kotlinVersion: String by settings
+
+pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.namespace?.startsWith("org.jetbrains.kotlin") == true) {
+                useVersion(kotlinVersion)
+            }
+        }
+    }
+}

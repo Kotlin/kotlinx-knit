@@ -3,13 +3,28 @@
  */
 
 import org.jetbrains.kotlin.gradle.plugin.*
+import java.util.*
 
 plugins {
     `kotlin-dsl`
 }
 
 repositories {
-    mavenCentral()
+    jcenter()
+}
+
+val props = Properties().apply {
+    project.file("../gradle.properties").inputStream().use { load(it) }
+}
+
+val kotlinVersion: String = props.getProperty("kotlinVersion")
+
+dependencies {
+    implementation(kotlin("gradle-plugin-api", kotlinVersion))
 }
 
 sourceSets["main"].withConvention(KotlinSourceSet::class) { kotlin.srcDirs("src") }
+
+kotlinDslPluginOptions {
+    experimentalWarning.set(false)
+}
