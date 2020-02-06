@@ -2,7 +2,7 @@
  * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package kotlinx.knit
+package kotlinx.knit.test
 
 import kotlin.math.*
 import kotlin.properties.*
@@ -10,27 +10,38 @@ import kotlin.properties.*
 private const val DIFF_LIMIT = 100
 private const val TEAR_LINE: String = "-------------------------------------------"
 
-fun diffErrorMessage(diff: String?): String = if (diff == null)
-    "difference is too big to show"
-else
-    "difference is\n$TEAR_LINE\n$diff\n$TEAR_LINE"
+/**
+ * The result of [computeLinesDiff] function.
+ */
+public class ComputedLinesDiff(val diff: List<String>?) {
+    /**
+     * Formats difference returned by [computeLinesDiff] for display in exception messages.
+     */
+    override fun toString() = if (diff == null)
+        "difference is too big to show"
+    else
+        "difference is\n$TEAR_LINE\n${diff.joinToString("\n")}\n$TEAR_LINE"
+}
 
-
-fun formatDiff(oldLines: List<String>, newLines: List<String>, limit: Int = DIFF_LIMIT): String? {
-    val diff = computeDiff(oldLines, newLines, limit) ?: return null
+/**
+ * Computes difference between two set of lines and returns it in diff format as a list of strings.
+ * The resulting [ComputedLinesDiff.diff] is `null` when difference exceeds [limit] lines.
+ */
+public fun computeLinesDiff(oldLines: List<String>, newLines: List<String>, limit: Int = DIFF_LIMIT): ComputedLinesDiff {
+    val diff = computeDiff(oldLines, newLines, limit) ?: return ComputedLinesDiff(null)
     val out = ArrayList<String>(diff.size * 2)
     var pOp: DiffOp? = null
     var pPos = 0
     var pHdr = -1
     var d1: Diff by Delegates.notNull()
     var d2: Diff by Delegates.notNull()
-
+    // helper function
     fun flushHeader() {
         if (pHdr < 0) return
         out[pHdr] = formatHeader(d1, d2)
         pHdr = -1
     }
-
+    // write all differences
     for (d in diff) {
         val pos = if (d.op == DiffOp.DELETE) d.x else d.y
         if (d.op != pOp || pos != pPos + 1) {
@@ -52,9 +63,8 @@ fun formatDiff(oldLines: List<String>, newLines: List<String>, limit: Int = DIFF
         pOp = d.op
         pPos = pos
     }
-
     flushHeader()
-    return out.joinToString("\n")
+    return ComputedLinesDiff(out)
 }
 
 private fun formatHeader(d1: Diff, d2: Diff): String {
@@ -141,7 +151,6 @@ private fun buildDiff(xs: List<String>, x1: Int, ys: List<String>, y1: Int, d0: 
     diff.reverse()
     return diff
 }
-
 
 private enum class DiffOp(val ch: Char, val md: Char) {
     INSERT('>', 'a'),

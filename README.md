@@ -38,7 +38,6 @@ Specific supported patterns and directives are explained in [Features](#features
 
 * [Setup](#setup)
   * [Tasks](#tasks)
-  * [API documentation setup](#api-documentation-setup)
   * [Optional parameters](#optional-parameters)
 * [Knit properties](#knit-properties)
 * [Features](#features)
@@ -48,7 +47,10 @@ Specific supported patterns and directives are explained in [Features](#features
     * [Include directive](#include-directive)
     * [Advanced include](#advanced-include)
   * [Tests](#tests)
+    * [Hidden test](#hidden-test)
+    * [Test template](#test-template)
   * [API references](#api-references)
+    * [Dokka setup](#dokka-setup)
   * [Table of contents](#table-of-contents)
 
 <!--- END -->
@@ -60,7 +62,7 @@ Knit is a Gradle plugin that is added to the `build.gradle` in the following way
 ```groovy
 buildscript {
     dependencies {
-        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1"
+        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1.0"
     }
 }
                     
@@ -76,27 +78,6 @@ Knit plugin registers the following tasks:
   it is automatically added as dependency to `check` task and thus is performed on `build`.
 * `knitPrepare` &mdash; does nothing, but is added as a dependency to both `knit` and `knitCheck` and a
   common place to register all prerequisite tasks like `dokka` (see [API documentation setup](#api-documentation-setup))    
-
-### API documentation setup
-
-In order to generate links to project's API documentation this documentation must be built using `dokka` in
-markdown format and website's root must be configured as shown below: 
-
-```
-knit {          
-    // Required parameter
-    siteRoot = "https://example.com"  // website with project's API documentation
-    // Optional parameters (do not need specify them if below defaults are Ok) 
-    moduleRoots = ["."] // list directories that contain project modules (subdir name == module name)
-    moduleMarkers = ["build.gradle", "build.gradle.kts"] // marker files that distinguish module directories
-    moduleDocs = "build/dokka" // where documentation is build into 
-}                       
-                                                      
-// Build API docs with dokka before running knit 
-knitPrepare.dependsOn rootProject.getTasksByName("dokka", true)
-```             
-
-See [API references](#api-references) section for usage details.
 
 ### Optional parameters
 
@@ -135,7 +116,7 @@ To set it up you need to specify at least the following two properties in [`knit
 for example:
 
 ```properties 
-knit.dir=example-basic/
+knit.dir=src/test/kotlin/example/
 knit.package=com.example
 ```                       
 
@@ -143,7 +124,7 @@ The `knit.dir` must specify the relative path to the directory for the examples 
 and `knit.package` must specify the package name for the example files. 
 The directory is usually marked as or located inside the project's test sources and gets
 compiled when the project is built. This way, `knit` tool helps to ensure that all the code in
-the documentation is syntactically correct (can be compiled without errors).
+the documentation is syntactically correct and compiler without errors.
 
 In the markdown file knit collects together all the `kotlin` sources in the markdown that are surrounded
 by a triple backticks like this:
@@ -156,7 +137,7 @@ The knit que to generate example source code is a markdown reference in round br
 to be generated. It must start with the value of `knit.dir` property (verbatim) followed by the example's
 file name, for example:       
 
-    > You can get full code [here](example-basic/example-basic-01.kt).
+    > You can get full code [here](src/test/kotlin/example/example-basic-01.kt).
     
 The name of the example file must match a specific pattern. By default, this pattern's regex is
 `example-[a-zA-Z0-9-]+-##\\.kt`. It can be overridden via `knit.pattern` [property](#knit-properties).
@@ -164,13 +145,13 @@ The sequence of hashes (`#`) in the pattern matches any alpha-numeric sequence a
 be automatically consecutively numbered inside the markdown file. For example, you can add a
 new section of code at the beginning of the document and write in the markdown file:
 
-    > You can get full code [here](example-basic/example-basic-new.kt).
+    > You can get full code [here](src/test/kotlin/example/example-basic-new.kt).
     
 After running `knit` task this line in the markdown file will get updated to:
 
-    > You can get full code [here](example-basic/example-basic-01.kt).
+    > You can get full code [here](esrc/test/kotlin/example/example-basic-01.kt).
     
-The corresponding Kotlin file is also automatically created (or updated as needed) by `knit` task
+The corresponding Kotlin file is also automatically created or updated as needed by `knit` task
 and will look like this:
 
 ```kotlin
@@ -200,7 +181,7 @@ functions as they are introduced. For example, the following markdown:
     }
     ```
 
-    > You can get full code [here](example-merge/example-merge-01.kt).
+    > You can get full code [here](src/test/kotlin/example/example-merge-01.kt).
     
 Produces the following Kotlin source code when `knit` task is run:
 
@@ -218,7 +199,7 @@ fun main() {
 #### Custom knit template
 
 The header of this generated example file can be configured by specifying `knit.include` [property](#knit-properties)
-that contains a path to the [Freemarker](https://freemarker.apache.org/) template file. The default template is:
+that contains a path to the [FreeMarker](https://freemarker.apache.org/) template file. The default template is:
 
 ```freemarker
 // This file was automatically generated from ${file.name} by Knit tool. Do not edit.
@@ -229,6 +210,10 @@ Each example file gets its unique package name where `${knit.package}` part is t
 and `${knit.name}` part is automatically generated by camel-casing the example file name. This allows to have
 a number of similar examples in the same markdown file that might, for example, define different versions
 of the function with the same name so that they could still be compiled, because they end up in different packages.
+
+You can use arbitrary `knit.xxx` [properties](#knit-properties) in the template and introduce your own properties
+so that you can reuse the same template in multiple kinds of documents in your project. The `knit.package` 
+property is not special in any way.
 
 #### Include directive
 
@@ -252,7 +237,7 @@ directive before this example. The markdown documentation looks like this:
     fun exit(): Nothing = exitProcess(0)
     ```                         
     
-    > You can get full code [here](example-include/example-include-01.kt).
+    > You can get full code [here](src/test/kotlin/example/example-include-01.kt).
     
 The knit directive looks like HTML comment, so the reader of this specific piece of documentation will not
 see the `import` line, but the generated source-code example file will include it to get compiled properly:
@@ -269,25 +254,119 @@ fun exit(): Nothing = exitProcess(0)
 #### Advanced include
 
 A single piece of code can be included into multiple examples (as opposed to the next example only) 
-by specifying regex patten of the example name right after `INCLUDE` directive. 
+by specifying regex patten of the example name right after `INCLUDE` directive as its parameter. 
 
 With the pattern the `INCLUDE` directive can also be specified on a single line, without the
 code inside of it. In this case, the code to be included is taken from the previously tripple-backquoted
-Kotlin source code before it. This way, the code snipped can be introduced and shown to the reader of
-the documentation and included into the subsequent examples at the same time.  
+Kotlin source code before it. This way, the code snippet can be introduced and shown to the reader of
+the documentation and then included into the several subsequent examples.  
 
 ### Tests
 
-Knit tool can also automatically generate tests. This feature is currently not very flexible and
-is quite project-specific. It will be improved and documented later.
+Knit tool can also automatically generate tests. To set it up you to be generating [example files](#example-files) first
+and then add the following properties in [`knit.properties`](#knit-properties):
+                                                 
+```properties 
+test.dir=src/test/kotlin/example/test/
+test.package=com.example.test
+```                       
+ 
+Here `test.dir` specified the directory where the Kotlin test code is generated too and `test.package` specifies
+the package. In the beginning of the markdown file you specify the name of the test using `TEST_NAME` directive.
+There is one test file per the source markdown file with a test-case for each example. After the example
+you can place the expected output of the test in tripple-quoted `text` block and add `TEST` directive after
+it to get the test-case added. For example:
+
+    <!--- TEST_NAME BasicTest --> 
+    
+    Here is some explanatory text
+    
+    ```kotlin 
+    fun main() {
+        println("Hello, world!")
+    }
+    ```                         
+    
+    > You can get full code [here](src/test/kotlin/example/example-basic-01.kt).  
+    
+    This code prints:
+    
+    ```text
+    Hello, world!
+    ```
+    
+    <!--- TEST -->
+
+Based on these directives, the knit task will create `BasicTest.kt` file with the following contents:
+
+```kotlin 
+// This file was automatically generated from test-basic.md by Knit tool. Do not edit.
+package com.example.test
+
+import org.junit.Test
+import kotlinx.knit.test.*
+
+class BasicTest {
+    @Test
+    fun testExampleBasic01() {
+        captureOutput("ExampleBasic01") { com.example.exampleBasic01.main() }.verifyOutputLines(
+            "Hello, world!"
+        )
+    }
+}
+``` 
+
+The test runs the generated example, assuming that it defines `main` function, and verifies the
+produced output. Two helper functions `captureOutput` and `verifyOutputLines` are provided in a separate
+artifact that you need to add to your test dependencies to compile and run the resulting test:
+
+```groovy
+dependencies {
+    testImplementation "org.jetbrains.kotlinx:kotlinx-knit-test:0.1.0"
+}
+``` 
+
+#### Hidden test
+
+If you do not want to include the sample output in the documentation itself, but still want the test
+to be generated, then you can include the expected output into the `TEST` directive itself, for example:
+
+    <!--- TEST
+    Hello, world!
+    -->
+
+
+#### Test template
+
+Generation of the test source code is completely template-based. The default template
+is located in [`knit.test.template`](resources/knit.test.template) file and can be overridden
+via `test.template` [property](#knit-properties).  
 
 ### API references
 
-Knit tool can add links to project's API documentation. The prerequisite to using this feature is
-that the project has one or several Gradle modules that generate API documentation in markdown
-format using Dokka.
+Knit tool can add links to project's API documentation, so that you can link to the public classes and
+functions similarly to how you do it from KDoc using markdown `[name]` reference syntax.
 
-To be documented later.
+#### Dokka setup
+
+In order to generate links to project's API documentation this documentation must be built using `dokka` in
+markdown format and website's root must be configured as shown below: 
+
+```
+knit {          
+    // Required parameter
+    siteRoot = "https://example.com"  // website with project's API documentation
+    // Optional parameters (do not need specify them if below defaults are Ok) 
+    moduleRoots = ["."] // list directories that contain project modules (subdir name == module name)
+    moduleMarkers = ["build.gradle", "build.gradle.kts"] // marker files that distinguish module directories
+    moduleDocs = "build/dokka" // where documentation is build into 
+}                       
+                                                      
+// Build API docs with dokka before running knit 
+knitPrepare.dependsOn rootProject.getTasksByName("dokka", true)
+```            
+
+To be documented later in more detail. 
 
 ### Table of contents
 

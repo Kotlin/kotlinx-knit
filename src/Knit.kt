@@ -4,6 +4,7 @@
 
 package kotlinx.knit
 
+import kotlinx.knit.test.*
 import java.io.*
 import java.util.*
 import kotlin.properties.*
@@ -13,12 +14,13 @@ import kotlin.system.*
 
 const val TEST_NAME_PROP = "test.name"
 const val TEST_DIR_PROP = "test.dir"
-const val TEST_INCLUDE_PROP = "test.include"
+const val TEST_TEMPLATE_PROP = "test.template"
+const val TEST_LANGUAGE_PROP = "test.language"
 
-const val KNIT_PACKAGE_PROP = "knit.package"
 const val KNIT_PATTERN_PROP = "knit.pattern"
 const val KNIT_DIR_PROP = "knit.dir"
 const val KNIT_INCLUDE_PROP = "knit.include"
+const val KNIT_LANGUAGE_PROP = "knit.language"
 
 // --- markdown syntax
 
@@ -39,24 +41,16 @@ const val TEST_NAME_DIRECTIVE = "TEST_NAME"
 const val MODULE_DIRECTIVE = "MODULE"
 const val INDEX_DIRECTIVE = "INDEX"
 
-const val CODE_START = "```kotlin"
+const val CODE_START = "```" // + knit.language
 const val CODE_END = "```"
 
 const val SAMPLE_START = "//sampleStart"
 const val SAMPLE_END = "//sampleEnd"
 
-const val TEST_START = "```text"
+const val TEST_START = "```" // + test.language
 const val TEST_END = "```"
 
 const val SECTION_START = "##"
-
-const val STARTS_WITH_PREDICATE = "STARTS_WITH"
-const val ARBITRARY_TIME_PREDICATE = "ARBITRARY_TIME"
-const val FLEXIBLE_TIME_PREDICATE = "FLEXIBLE_TIME"
-const val FLEXIBLE_THREAD_PREDICATE = "FLEXIBLE_THREAD"
-const val LINES_START_UNORDERED_PREDICATE = "LINES_START_UNORDERED"
-const val EXCEPTION_MODE = "EXCEPTION"
-const val LINES_START_PREDICATE = "LINES_START"
 
 val API_REF_REGEX = Regex("(^|[ \\](])\\[([A-Za-z0-9_().]+)]($|[^\\[(])")
 val LINK_DEF_REGEX = Regex("^\\[([A-Za-z0-9_().]+)]: .*")
@@ -123,9 +117,7 @@ fun KnitConfig.loadMainInclude(file: File, props: KnitProps, knitName: String): 
 }
 
 // Reference to knitted example's full package (pkg.name)
-class KnitRef(val pkg: String, val name: String) {
-    override fun toString(): String = "$pkg.$name"
-}
+class KnitRef(val props: KnitProps, val name: String)
 
 fun KnitContext.knit(markdownFile: File): Boolean {
     log.info("*** Reading $markdownFile")
@@ -134,10 +126,12 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     val knitAutonumberIndex = HashMap<String, Int>()
     val tocLines = arrayListOf<String>()
     val includes = arrayListOf<Include>()
+    val codeStartLang = CODE_START + props.getValue(KNIT_LANGUAGE_PROP)
     val codeLines = arrayListOf<String>()
+    val testStartLang = TEST_START + props.getValue(TEST_LANGUAGE_PROP)
     val testLines = arrayListOf<String>()
     var testName: String? = props[TEST_NAME_PROP]
-    val testOutLines = arrayListOf<String>()
+    val testCases = arrayListOf<TestCase>()
     var lastKnit: KnitRef? = null
     val files = mutableSetOf<File>()
     val allApiRefs = arrayListOf<ApiRef>()
@@ -203,22 +197,22 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 TEST_NAME_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isNotEmpty()) { "$TEST_NAME_DIRECTIVE directive must include name parameter" }
-                    flushTestOut(markdownFile, props, testName, testOutLines)
+                    flushTestOut(markdownFile, props, testName, testCases)
                     testName = directive.param
                 }
                 TEST_DIRECTIVE -> {
                     require(lastKnit != null) { "$TEST_DIRECTIVE must be preceded by knitted file" }
                     require(testName != null) { "Neither $TEST_NAME_DIRECTIVE directive nor '$TEST_NAME_PROP'property was specified" }
-                    val predicate = directive.param
+                    val param = directive.param
                     if (testLines.isEmpty()) {
                         if (directive.singleLine) {
-                            require(predicate.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $TEST_START block or contain test predicate"}
+                            require(param.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $testStartLang block or contain test parameter"}
                         } else
                             testLines += readUntil(DIRECTIVE_END)
                     } else {
                         requireSingleLine(directive)
                     }
-                    makeTest(testOutLines, lastKnit!!, testLines, predicate)
+                    testCases += makeTest(lastKnit!!, testLines.toList(), param)
                     testLines.clear()
                 }
                 MODULE_DIRECTIVE -> {
@@ -236,7 +230,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")
                 }
             }
-            if (inLine.startsWith(CODE_START)) {
+            if (inLine.startsWith(codeStartLang)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 if (codeLines.lastOrNull()?.isNotBlank() == true) codeLines += ""
                 readUntilTo(CODE_END, codeLines) { line ->
@@ -244,7 +238,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 continue@mainLoop
             }
-            if (inLine.startsWith(TEST_START)) {
+            if (inLine.startsWith(testStartLang)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 readUntilTo(TEST_END, testLines)
                 continue@mainLoop
@@ -304,7 +298,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 codeLines.clear()
                 writeLinesIfNeeded(file, outLines)
-                lastKnit = KnitRef(props.getValue(KNIT_PACKAGE_PROP), knitName)
+                lastKnit = KnitRef(props, knitName)
             }
         }
     } ?: return false // false when failed
@@ -331,7 +325,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
         }
     }
     // write test output
-    flushTestOut(markdownFile, props, testName, testOutLines)
+    flushTestOut(markdownFile, props, testName, testCases)
     return true
 }
 
@@ -350,60 +344,39 @@ private fun String.capitalizeAfter(char: Char): String = buildString {
 
 data class TocRef(val levelPrefix: String, val name: String, val ref: String)
 
-fun makeTest(testOutLines: MutableList<String>, knit: KnitRef, test: List<String>, predicate: String) {
-    val funName = knit.name.capitalize()
-    testOutLines += ""
-    testOutLines += "    @Test"
-    testOutLines += "    fun test$funName() {"
-    val prefix = "        test(\"$funName\") { $knit.main() }"
-    when (predicate) {
-        "" -> makeTestLines(testOutLines, prefix, "verifyLines", test)
-        STARTS_WITH_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesStartWith", test)
-        ARBITRARY_TIME_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesArbitraryTime", test)
-        FLEXIBLE_TIME_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesFlexibleTime", test)
-        FLEXIBLE_THREAD_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesFlexibleThread", test)
-        LINES_START_UNORDERED_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesStartUnordered", test)
-        EXCEPTION_MODE -> makeTestLines(testOutLines, prefix, "verifyExceptions", test)
-        LINES_START_PREDICATE -> makeTestLines(testOutLines, prefix, "verifyLinesStart", test)
-        else -> {
-            testOutLines += "$prefix.also { lines ->"
-            testOutLines += "            check($predicate)"
-            testOutLines += "        }"
-        }
-    }
-    testOutLines += "    }"
-}
-
-private fun makeTestLines(testOutLines: MutableList<String>, prefix: String, method: String, test: List<String>) {
-    testOutLines += "$prefix.$method("
-    for ((index, testLine) in test.withIndex()) {
-        val commaOpt = if (index < test.size - 1) "," else ""
-        val escapedLine = testLine.replace("\"", "\\\"")
-        testOutLines += "            \"$escapedLine\"$commaOpt"
-    }
-    testOutLines += "        )"
-}
+fun makeTest(knit: KnitRef, testLines: List<String>, param: String): TestCase =
+    TestCase(knit.props, knit.name, knit.name.capitalize(), param, testLines)
 
 @Suppress("unused") // This class is passed to freemarker template
 class TestTemplateEnv(
     val file: File,
     props: KnitProps,
-    testName: String
+    testName: String,
+    val cases: List<TestCase>
+
 ) {
     val test = props.getMap("test") + mapOf("name" to testName)
 }
 
-private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: String?, testOutLines: MutableList<String>) {
-    if (testOutLines.isEmpty()) return
+@Suppress("unused") // This class is passed to freemarker template
+class TestCase(
+    props: KnitProps,
+    knitName: String,
+    val name: String,
+    val param: String,
+    val lines: List<String>
+) {
+    val knit = props.getMap("knit") + mapOf("name" to knitName)
+}
+
+private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: String?, testCases: MutableList<TestCase>) {
+    if (testCases.isEmpty()) return
     if (testName == null) return
-    val lines = arrayListOf<String>()
-    lines += props.loadTemplateLines(TEST_INCLUDE_PROP, TestTemplateEnv(file, props, testName))
-    lines += testOutLines
-    lines += "}"
+    val lines = props.loadTemplateLines(TEST_TEMPLATE_PROP, TestTemplateEnv(file, props, testName, testCases))
     val testFile = File(props.getFile(TEST_DIR_PROP), "$testName.kt")
     log.info("Checking $testFile")
     writeLinesIfNeeded(testFile, lines)
-    testOutLines.clear()
+    testCases.clear()
 }
 
 private fun MarkdownTextReader.readUntil(marker: String): List<String> =
@@ -530,8 +503,8 @@ private fun formatOutdated(oldLines: List<String>?, outLines: List<String>) =
     if (oldLines == null)
         "is missing"
     else {
-        val msg = diffErrorMessage(formatDiff(oldLines, outLines))
-        "is not up-to-date, $msg"
+        val diff = computeLinesDiff(oldLines, outLines)
+        "is not up-to-date, $diff"
     }
 
 fun KnitContext.writeLines(file: File, lines: List<String>) {

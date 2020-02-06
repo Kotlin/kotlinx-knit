@@ -4,6 +4,7 @@
 
 package kotlinx.knit
 
+import kotlinx.knit.test.*
 import java.nio.file.*
 import kotlin.streams.*
 import kotlin.test.*
@@ -53,8 +54,8 @@ fun assertSameFile(expected: Path, actual: Path) {
     val expectedLines = Files.readAllLines(expected)
     val actualLines = Files.readAllLines(actual)
     if (actualLines != expectedLines) {
-        val msg = diffErrorMessage(formatDiff(expectedLines, actualLines))
-        error("Actual file in $actual and not the same as expected in $expected, $msg")
+        val diff = computeLinesDiff(expectedLines, actualLines)
+        error("Actual file in $actual and not the same as expected in $expected, $diff")
     }
 }
 

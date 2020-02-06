@@ -10,38 +10,49 @@ plugins {
     `maven-publish`
 }
 
-repositories {
-    jcenter()
+allprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "org.gradle.maven-publish")
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        implementation(kotlin("stdlib-jdk8"))
+        testImplementation(kotlin("test-junit"))
+    }
+    
+    tasks.withType<KotlinCompile>().configureEach {
+        kotlinOptions.apply {
+            languageVersion = "1.3"
+            jvmTarget = "1.8"
+            allWarningsAsErrors = true
+        }
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+                mavenCentralMetadata()
+            }
+        }
+    }
+    
+    sourceSets {
+        main.kotlin.dir = "src"
+        test.kotlin.dir = "test"
+        main.resources.dir = "resources"
+    }
 }
+
+// ---------- This root project -- Gradle plugin ----------
 
 val freemarkerVersion: String by project
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
     implementation(gradleApi())
     implementation("org.freemarker:freemarker:$freemarkerVersion")
-    testImplementation(kotlin("test-junit"))
-}
-
-sourceSets {
-    main.kotlin.dir = "src"
-    test.kotlin.dir = "test"
-    main.resources.dir = "resources"
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.apply {
-        languageVersion = "1.3"
-        jvmTarget = "1.8"
-        allWarningsAsErrors = true
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            mavenCentralMetadata()
-        }
-    }
+    implementation(project(":kotlinx-knit-test"))
 }

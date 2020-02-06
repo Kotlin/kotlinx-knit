@@ -1,0 +1,24 @@
+// This file was automatically generated from ${file.name} by Knit tool. Do not edit.
+package ${test.package}
+
+import org.junit.Test
+import kotlinx.knit.test.*
+
+class ${test.name} {
+<#list cases as case>
+    @Test
+    fun test${case.name}() {
+        captureOutput("${case.name}") { ${case.knit.package}.${case.knit.name}.main() }<#if case.param == "">.verifyOutputLines(
+<#list case.lines as line>
+            "${line?j_string}"<#sep>,</#sep>
+</#list>
+        )
+<#else>.also { lines ->
+            check(${case.param})
+        }
+</#if>
+    }
+<#sep>
+
+</#list>
+}

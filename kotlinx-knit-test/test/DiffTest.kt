@@ -2,25 +2,28 @@
  * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package kotlinx.knit
+package kotlinx.knit.test
 
 import org.junit.Test
 import kotlin.random.*
 import kotlin.test.*
 
 class DiffTest {
+    private fun compute(oldLines: List<String>, newLines: List<String>): String? =
+        computeLinesDiff(oldLines, newLines).diff?.joinToString("\n")
+    
     @Test
     fun testDiffSame() {
         assertEquals(
             "",
-            formatDiff(
+            compute(
                 listOf(),
                 listOf()
             )
         )
         assertEquals(
             "",
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("a", "b", "c")
             )
@@ -34,7 +37,7 @@ class DiffTest {
             3a4
             > d
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("a", "b", "c", "d")
             )
@@ -44,7 +47,7 @@ class DiffTest {
             0a1
             > _
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("_", "a", "b", "c")
             )
@@ -56,7 +59,7 @@ class DiffTest {
             > 2
             > 3
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("1", "2", "3", "a", "b", "c")
             )
@@ -66,7 +69,7 @@ class DiffTest {
             1a2
             > 1
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("a", "1", "b", "c")
             )
@@ -78,7 +81,7 @@ class DiffTest {
             2a4
             > 2
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c"),
                 listOf("a", "1", "b", "2", "c")
             )
@@ -92,7 +95,7 @@ class DiffTest {
             4d3
             < d
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c", "d"),
                 listOf("a", "b", "c")
             )
@@ -103,7 +106,7 @@ class DiffTest {
             < b
             < c
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c", "d"),
                 listOf("a", "d")
             )
@@ -115,7 +118,7 @@ class DiffTest {
             4d2
             < d
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b", "c", "d", "e"),
                 listOf("a", "c", "e")
             )
@@ -133,7 +136,7 @@ class DiffTest {
             > c
             > d
             """.trimIndent(),
-            formatDiff(
+            compute(
                 listOf("a", "b"),
                 listOf("c", "d")
             )
@@ -224,7 +227,7 @@ class DiffTest {
             > important new additions
             > to this document.
         """.trimIndent()
-        assertEquals(expectedDiff, formatDiff(oldLines, newLines))
+        assertEquals(expectedDiff, compute(oldLines, newLines))
     }
 
     @Test
@@ -239,6 +242,6 @@ class DiffTest {
         }
         val oldLines = rndLines()
         val newLines = rndLines()
-        assertNull(formatDiff(oldLines, newLines))
+        assertNull(compute(oldLines, newLines))
     }
 }

@@ -3,6 +3,7 @@
  */
 
 rootProject.name = "kotlinx-knit"
+include("kotlinx-knit-test")
 
 val kotlinVersion: String by settings
 
