@@ -44,7 +44,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
 * [Features](#features)
   * [Example files](#example-files)
     * [Merging code pieces](#merging-code-pieces)
-    * [Custom knit template](#custom-knit-template)
+    * [Custom Knit template](#custom-knit-template)
     * [Include directive](#include-directive)
     * [Advanced include](#advanced-include)
   * [Tests](#tests)
@@ -111,7 +111,7 @@ property file. Paths specified in markdown files are relative to the correspondi
 
 ## Features
 
-All knit features are driven by feature-specific patterns and directives and can be used independently. 
+All Knit features are driven by feature-specific patterns and directives and can be used independently. 
 
 ### Example files 
 
@@ -127,17 +127,17 @@ knit.package=com.example
 The `knit.dir` must specify the relative path to the directory for the examples (note that it must end with `/`)
 and `knit.package` must specify the package name for the example files. 
 The directory is usually marked as or located inside the project's test sources and gets
-compiled when the project is built. This way, `knit` tool helps to ensure that all the code in
+compiled when the project is built. This way, Knit tool helps to ensure that all the code in
 the documentation is syntactically correct and compiler without errors.
 
-In the markdown file knit collects together all the `kotlin` sources in the markdown that are surrounded
+In the markdown file Knit collects together all the `kotlin` sources in the markdown that are surrounded
 by a triple backticks like this:
 
     ```kotlin
     fun foo() {}
     ```
     
-The knit que to generate example source code is a markdown reference in round braces to the file that needs
+The Knit que to generate example source code is a markdown reference in round braces to the file that needs
 to be generated. It must start with the value of `knit.dir` property (verbatim) followed by the example's
 file name, for example:       
 
@@ -167,8 +167,8 @@ fun foo() {}
 
 #### Merging code pieces
 
-All tripple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when then next
-knit pattern in encountered. This way, documentation can be written fluently, explaining
+All tripple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when the next
+Knit pattern in encountered. This way, documentation can be written fluently, explaining
 functions as they are introduced. For example, the following markdown:
 
     This function computes the square of the given integer:
@@ -200,7 +200,7 @@ fun main() {
 }
 ```                                         
 
-#### Custom knit template
+#### Custom Knit template
 
 The header of this generated example file can be configured by specifying `knit.include` [property](#knit-properties)
 that contains a path to the [FreeMarker](https://freemarker.apache.org/) template file. The default template is:
@@ -230,7 +230,7 @@ function might have the following example piece of code:
 fun exit(): Nothing = exitProcess(0)
 ```
 
-It will not compile by itself. In order to generate a proper compilable example file we'd use an `INCLUDE` knit
+It will not compile by itself. In order to generate a proper compilable example file we'd use an `INCLUDE` Knit
 directive before this example. The markdown documentation looks like this:
 
     <!--- INCLUDE
@@ -243,7 +243,7 @@ directive before this example. The markdown documentation looks like this:
     
     > You can get full code [here](src/test/kotlin/example/example-include-01.kt).
     
-The knit directive looks like HTML comment, so the reader of this specific piece of documentation will not
+The Knit directive is like HTML comment, so the reader of this specific piece of documentation will not
 see the `import` line, but the generated source-code example file will include it to get compiled properly:
 
 ```kotlin
@@ -301,7 +301,7 @@ it to get the test-case added. For example:
     
     <!--- TEST -->
 
-Based on these directives, the knit task will create `BasicTest.kt` file with the following contents:
+Based on these directives, the `knit` task will create `BasicTest.kt` file with the following contents:
 
 ```kotlin 
 // This file was automatically generated from test-basic.md by Knit tool. Do not edit.
@@ -368,8 +368,17 @@ functions similarly to how you do it from KDoc using markdown `[name]` reference
 
 #### Dokka setup
 
-In order to generate links to project's API documentation this documentation must be built using `dokka` in
-markdown format and website's root must be configured as shown below: 
+In order to generate links to project's API documentation this documentation must be built using 
+[Dokka](https://github.com/Kotlin/dokka) in either `markdown` or `jekyll` format:
+
+```groovy 
+dokka {
+    outputFormat = "jekyll" 
+    outputDirectory = "$buildDir/dokka"
+}
+``` 
+
+Website's root for Knit must be configured as shown below: 
 
 ```
 knit {          
@@ -378,14 +387,38 @@ knit {
     // Optional parameters (do not need specify them if below defaults are Ok) 
     moduleRoots = ["."] // list directories that contain project modules (subdir name == module name)
     moduleMarkers = ["build.gradle", "build.gradle.kts"] // marker files that distinguish module directories
-    moduleDocs = "build/dokka" // where documentation is build into 
+    moduleDocs = "build/dokka" // where documentation is build into relative to module root 
 }                       
                                                       
-// Build API docs with dokka before running knit 
+// Build API docs for all modules with dokka before running Knit 
 knitPrepare.dependsOn rootProject.getTasksByName("dokka", true)
-```            
+```          
 
-To be documented later in more detail. 
+The modules providing APIs must be in their separate directories named after the module name. For example,
+this project has [`kotlinx-knit-test`](kotlinx-knit-test) module in a separate directory. You can reference
+functions and classes declared there using a regular markdown link syntax and give instructions to Knit 
+tool to expand those links like this:
+
+    Here is a link to [captureOutput] function.
+
+    <!--- MODULE kotlinx-knit-test -->
+    <!--- INDEX kotlinx.knit.test -->
+    <!--- END -->
+    
+The `MODULE` directive specified the name of the module. Knit looks for the corresponding directory that contains
+one of the configured `moduleMarkers` files. This directive is followed by one or more `INDEX` directives that
+specify package names. 
+
+When you run `knit` task this markdown gets updated to:
+
+    Here is a link to [captureOutput] function.
+
+    <!--- MODULE kotlinx-knit-test -->
+    <!--- INDEX kotlinx.knit.test -->
+    [captureOutput]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
+    <!--- END -->
+    
+Now the link is defined to point to `<siteRoot>/<moduleName>/<package>/<docs-file>`.    
 
 ### Table of contents
 

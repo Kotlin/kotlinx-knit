@@ -35,7 +35,11 @@ class ConsoleLog : KnitLog() {
         hasWarningOrError = true
     }
 
-    override fun error(s: String, e: Exception) = warn(s)
+    override fun error(s: String, e: Exception) {
+        println(s)
+        e.printStackTrace(System.out)
+        hasWarningOrError = true
+    }
 }
 
 class LoggerLog : KnitLog() {

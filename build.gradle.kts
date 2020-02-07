@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.dokka") version "0.10.1" apply false
     `maven-publish`
 }
 
@@ -55,4 +56,8 @@ dependencies {
     implementation(gradleApi())
     implementation("org.freemarker:freemarker:$freemarkerVersion")
     implementation(project(":kotlinx-knit-test"))
+}
+
+val test by tasks.getting(AbstractTestTask::class) {
+    dependsOn(tasks.findByPath(":kotlinx-knit-test:dokka"))
 }

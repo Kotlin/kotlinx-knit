@@ -12,10 +12,30 @@ data class ApiIndexKey(
     val pkg: String
 )
 
-const val INDEX_HTML = "/index.html"
-const val INDEX_MD = "/index.md"
-const val FUNCTIONS_SECTION_HEADER = "### Functions"
-val REF_LINE_REGEX = Regex("<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>")
+private const val HTML_SUFFIX = ".html"
+private const val MD_SUFFIX = ".md"
+
+private const val INDEX_HTML = "/index$HTML_SUFFIX"
+private const val INDEX_MD = "/index$MD_SUFFIX"
+private const val FUNCTIONS_SECTION_HEADER = "### Functions"
+
+private val REF_HTML_LINE_REGEX = Regex("<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>")
+private val REF_MD_LINE_REGEX = Regex("\\| \\[([a-zA-z0-9.]+)]\\(([a-z0-9_/.\\-]+)\\) \\|.*")
+
+// link ends with ".html"
+private data class Ref(val link: String, val name: String)
+
+private fun matchRef(line: String): Ref? {
+    REF_HTML_LINE_REGEX.matchEntire(line)?.let {
+        return Ref(link = it.groups[1]!!.value, name = it.groups[2]!!.value)
+    }
+    REF_MD_LINE_REGEX.matchEntire(line)?.let {
+        var link = it.groups[2]!!.value
+        if (link.endsWith(MD_SUFFIX)) link = link.substring(0, link.length - MD_SUFFIX.length) + HTML_SUFFIX
+        return Ref(link = link, name = it.groups[1]!!.value)
+    }
+    return null
+}
 
 private fun HashMap<String, MutableList<String>>.putUnambiguous(key: String, value: String) {
     val oldValue = this[key]
@@ -41,11 +61,9 @@ private fun KnitContext.loadApiIndex(
         while (true) {
             val line = readLine() ?: break
             if (line == FUNCTIONS_SECTION_HEADER) inFunctionsSection = true
-            val result = REF_LINE_REGEX.matchEntire(line) ?: continue
-            val link = result.groups[1]!!.value
+            var (link, name) = matchRef(line) ?: continue
             if (link.startsWith("..")) continue // ignore cross-references
             val absLink = "$path/$link"
-            var name = result.groups[2]!!.value
             // a special disambiguation fix for pseudo-constructor functions
             if (inFunctionsSection && name[0] in 'A'..'Z') name += "()"
             val refName = namePrefix + name
