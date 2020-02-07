@@ -39,6 +39,9 @@ allprojects {
         main.resources.dir = "resources"
     }
 
+    // Set version when deploying
+    properties["DeployVersion"]?.let { version = it }
+    
     val sourcesJar by tasks.creating(Jar::class) {
         archiveClassifier.set("sources")
         from(sourceSets.main.allSource)
