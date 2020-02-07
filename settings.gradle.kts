@@ -6,12 +6,15 @@ rootProject.name = "kotlinx-knit"
 include("kotlinx-knit-test")
 
 val kotlinVersion: String by settings
+val dokkaVersion: String by settings
 
 pluginManagement {
     resolutionStrategy {
         eachPlugin {
-            if (requested.id.namespace?.startsWith("org.jetbrains.kotlin") == true) {
-                useVersion(kotlinVersion)
+            val id = requested.id.id
+            when {
+                id.startsWith("org.jetbrains.kotlin.") -> useVersion(kotlinVersion)
+                id == "org.jetbrains.dokka" -> useVersion(dokkaVersion)
             }
         }
     }

@@ -16,6 +16,9 @@ val NamedDomainObjectProvider<SourceSet>.kotlin: SourceDirectorySet
 val NamedDomainObjectProvider<SourceSet>.resources: SourceDirectorySet
     get() = get().resources
 
+val NamedDomainObjectProvider<SourceSet>.allSource: SourceDirectorySet
+    get() = get().allSource
+
 var SourceDirectorySet.dir: String
     get() = srcDirs().joinToString(",")
     set(value) { setSrcDirs(value.split(",")) }

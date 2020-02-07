@@ -3,11 +3,12 @@
  */
 
 import kotlinx.knit.build.*
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlin("jvm")
-    id("org.jetbrains.dokka") version "0.10.1" apply false
+    id("org.jetbrains.dokka") apply false
     `maven-publish`
 }
 
@@ -32,19 +33,32 @@ allprojects {
         }
     }
 
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                from(components["java"])
-                mavenCentralMetadata()
-            }
-        }
-    }
-    
     sourceSets {
         main.kotlin.dir = "src"
         test.kotlin.dir = "test"
         main.resources.dir = "resources"
+    }
+
+    val sourcesJar by tasks.creating(Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.main.allSource)
+    }
+
+    val javadocJar by tasks.creating(Jar::class) {
+        archiveClassifier.set("javadoc")
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+                artifact(sourcesJar)
+                artifact(javadocJar)
+                mavenCentralMetadata()
+            }
+        }
+
+        bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "kotlinx.knit")
     }
 }
 
