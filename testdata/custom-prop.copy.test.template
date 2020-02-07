@@ -1,0 +1,22 @@
+// ${test.copyright}
+// This file was automatically generated from ${file.name} by Knit tool. Do not edit.
+package ${test.package}
+
+import org.junit.Test
+import kotlinx.knit.test.*
+${test.import}
+
+class ${test.name} {
+<#list cases as case>
+    @Test
+    fun `test${case.name}`() {
+        ${case.knit.package}.${case.knit.name}.result().verifyOutputLines(
+<#list case.lines as line>
+            "${line?j_string}"<#sep>,</#sep>
+</#list>
+        )
+    }
+<#sep>
+
+</#list>
+}

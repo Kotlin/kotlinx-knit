@@ -19,7 +19,7 @@ additional example and test files, which are committed to the VCS. The overall w
 4. Generated files are automatically verified on subsequent project builds.
 
 Knit does not really parse markdown format or HTML, but understands certain patterns and _directives_.
-Directives must always start at the beginning of the line and have the following general format for 
+Directives must always start at the beginning of the line and have the following general format for
 single-line directives:
 
     <!--- <directive> [<parameters>] -->
@@ -30,7 +30,8 @@ or the following format for multi-line directives:
     <text> 
     -->
 
-Specific supported patterns and directives are explained in [Features](#features) section. 
+Directives look like HTML comments, so their contents are not visible when the markdown is rendered by
+regular tools. Specific supported patterns and directives are explained in [Features](#features) section. 
 
 ## Contents
 
@@ -48,6 +49,7 @@ Specific supported patterns and directives are explained in [Features](#features
     * [Advanced include](#advanced-include)
   * [Tests](#tests)
     * [Hidden test](#hidden-test)
+    * [Custom test predicate](#custom-test-predicate)
     * [Test template](#test-template)
   * [API references](#api-references)
     * [Dokka setup](#dokka-setup)
@@ -59,10 +61,12 @@ Specific supported patterns and directives are explained in [Features](#features
 
 Knit is a Gradle plugin that is added to the `build.gradle` in the following way:
 
-```groovy
+```groovy        
+ext.knit_version = "0.1.0"
+
 buildscript {
     dependencies {
-        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1.0"
+        classpath "org.jetbrains.kotlinx:kotlinx-knit:$knit_version"
     }
 }
                     
@@ -77,7 +81,7 @@ Knit plugin registers the following tasks:
 * `knitCheck` &mdash; checks that all the files are up-to-date and fail the build if not;
   it is automatically added as dependency to `check` task and thus is performed on `build`.
 * `knitPrepare` &mdash; does nothing, but is added as a dependency to both `knit` and `knitCheck` and a
-  common place to register all prerequisite tasks like `dokka` (see [API documentation setup](#api-documentation-setup))    
+  common place to register all prerequisite tasks like `dokka` (see [Dokka setup](#dokka-setup))    
 
 ### Optional parameters
 
@@ -163,8 +167,8 @@ fun foo() {}
 
 #### Merging code pieces
 
-All backticked Kotin sections are merged together and is output to the Kotlin source file when then next
-knit pattern in encountered. This way, documentation can be written fluently, explaining 
+All tripple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when then next
+knit pattern in encountered. This way, documentation can be written fluently, explaining
 functions as they are introduced. For example, the following markdown:
 
     This function computes the square of the given integer:
@@ -253,7 +257,7 @@ fun exit(): Nothing = exitProcess(0)
 
 #### Advanced include
 
-A single piece of code can be included into multiple examples (as opposed to the next example only) 
+A single piece of code can be included into multiple examples (as opposed to the next example only)
 by specifying regex patten of the example name right after `INCLUDE` directive as its parameter. 
 
 With the pattern the `INCLUDE` directive can also be specified on a single line, without the
@@ -316,15 +320,18 @@ class BasicTest {
 }
 ``` 
 
-The test runs the generated example, assuming that it defines `main` function, and verifies the
+The test runs the generated example, assuming it defines `main` function, and verifies the
 produced output. Two helper functions `captureOutput` and `verifyOutputLines` are provided in a separate
 artifact that you need to add to your test dependencies to compile and run the resulting test:
 
 ```groovy
 dependencies {
-    testImplementation "org.jetbrains.kotlinx:kotlinx-knit-test:0.1.0"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-knit-test:$knit_version"
 }
 ``` 
+
+> You don't need this dependency if you use a custom [test template](#test-template) that is using
+> your project-specific functions.  
 
 #### Hidden test
 
@@ -335,12 +342,24 @@ to be generated, then you can include the expected output into the `TEST` direct
     Hello, world!
     -->
 
+#### Custom test predicate
+
+If the output of the sample code can be non-deterministic you'd need to write test verification logic.
+If this logic is single-liner, then you can specify the corresponding test predicate directly as
+parameter to `TEST` directive operating over `lines: List<String>`, for example, in order
+to check that the example had output an integer between 1 and 100 you can write:
+ 
+    <!--- TEST lines.single().toInt() in 1..100 -->   
 
 #### Test template
 
 Generation of the test source code is completely template-based. The default template
 is located in [`knit.test.template`](resources/knit.test.template) file and can be overridden
-via `test.template` [property](#knit-properties).  
+via `test.template` [property](#knit-properties).
+You can use arbitrary `test.xxx` [properties](#knit-properties) in the test template.
+
+The default template assumes that example code contains `main()` function and produces some output on the
+console. By tweaking the template you can test other kinds of examples in your markdown documentation.  
 
 ### API references
 

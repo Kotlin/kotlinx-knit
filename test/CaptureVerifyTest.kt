@@ -18,5 +18,16 @@ class CaptureVerifyTest {
     private fun exampleMain() {
         println("Hello, world!")
     }
+
+    @Test
+    fun testPredicate() {
+        captureOutput("ExamplePredicate01") { predicateMain() }.also { lines ->
+            check(lines.single().toInt() in 1..100)
+        }
+    }
+
+    private fun predicateMain() {
+        println(42)
+    }
 }
 

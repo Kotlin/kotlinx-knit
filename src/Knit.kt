@@ -28,6 +28,7 @@ const val DIRECTIVE_START = "<!--- "
 const val DIRECTIVE_END = "-->"
 
 const val TOC_DIRECTIVE = "TOC"
+const val END_DIRECTIVE = "END"
 const val TOC_REF_DIRECTIVE = "TOC_REF"
 const val INCLUDE_DIRECTIVE = "INCLUDE"
 const val CLEAR_DIRECTIVE = "CLEAR"
@@ -150,6 +151,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 postTocText += inLine
             }
             when (directive?.name) {
+                null, END_DIRECTIVE -> { /* do nothing, END works like NOP, too */ }
                 TOC_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isEmpty()) { "$TOC_DIRECTIVE directive must not have parameters" }
@@ -228,6 +230,9 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     )
                         ?: throw IllegalArgumentException("Failed to load index for ${directive.param}")
                     if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")
+                }
+                else -> {
+                    error("Unrecognized knit directive '${directive.name}' on a line starting with '$DIRECTIVE_START'")
                 }
             }
             if (inLine.startsWith(codeStartLang)) {
@@ -355,7 +360,7 @@ class TestTemplateEnv(
     val cases: List<TestCase>
 
 ) {
-    val test = props.getMap("test") + mapOf("name" to testName)
+    val test = props.getMap("test", "name" to testName)
 }
 
 @Suppress("unused") // This class is passed to freemarker template
@@ -366,7 +371,7 @@ class TestCase(
     val param: String,
     val lines: List<String>
 ) {
-    val knit = props.getMap("knit") + mapOf("name" to knitName)
+    val knit = props.getMap("knit", "name" to knitName)
 }
 
 private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: String?, testCases: MutableList<TestCase>) {

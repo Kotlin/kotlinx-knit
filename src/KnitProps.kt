@@ -46,13 +46,16 @@ class KnitProps(
     private fun getFileImpl(name: String): File? =
         props.getProperty(name)?.let { location.resolveFile(it) } ?: parent?.getFileImpl(name)
 
-    fun getMap(prefix: String): Map<String, String> {
+    fun getMap(prefix: String, vararg plus: Pair<String, String>): Map<String, String> {
         val result = HashMap<String, String>()
         parent?.getMap(prefix)?.let { result.putAll(it) }
         val p = "$prefix."
         @Suppress("UNCHECKED_CAST")
         for ((k, v) in (props as Map<String, String>)) {
             if (k.startsWith(p)) result[k.substring(p.length)] = v
+        }
+        for ((k, v) in plus) {
+            result[k] = v
         }
         return result
     }
