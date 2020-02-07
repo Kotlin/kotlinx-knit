@@ -3,12 +3,12 @@
  */
 
 import kotlinx.knit.build.*
-import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka") apply false
+    `java-gradle-plugin`
     `maven-publish`
 }
 
@@ -42,30 +42,30 @@ allprojects {
     // Set version when deploying
     properties["DeployVersion"]?.let { version = it }
     
-    val sourcesJar by tasks.creating(Jar::class) {
-        archiveClassifier.set("sources")
-        from(sourceSets.main.allSource)
-    }
-
-    val javadocJar by tasks.creating(Jar::class) {
-        archiveClassifier.set("javadoc")
-    }
-
     publishing {
         publications {
             create<MavenPublication>("maven") {
                 from(components["java"])
-                artifact(sourcesJar)
-                artifact(javadocJar)
                 mavenCentralMetadata()
+                mavenCentralArtifacts(project, project.sourceSets.main.allSource)
             }
         }
-
         bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "kotlinx.knit")
     }
 }
 
 // ---------- This root project -- Gradle plugin ----------
+
+apply(plugin = "org.gradle.java-gradle-plugin")
+
+gradlePlugin {
+    plugins {
+        create("knit") {
+            id = "kotlinx-knit"
+            implementationClass = "kotlinx.knit.KnitPlugin"
+        }
+    }
+}
 
 val freemarkerVersion: String by project
 

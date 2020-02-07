@@ -41,7 +41,7 @@ open class KnitTask : DefaultTask() {
     @Input
     var check: Boolean = false
 
-    @Input
+    @InputDirectory
     var rootDir: File = ext.rootDir ?: project.rootDir
 
     @InputFiles
