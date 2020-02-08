@@ -65,6 +65,9 @@ Knit is a Gradle plugin that is added to the `build.gradle` in the following way
 ext.knit_version = "0.1.0"
 
 buildscript {
+    repositories {
+        maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
+    }
     dependencies {
         classpath "org.jetbrains.kotlinx:kotlinx-knit:$knit_version"
     }
