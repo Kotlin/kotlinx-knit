@@ -104,7 +104,7 @@ knit {
 
 ## Knit properties
 
-Some Knit [features][#features] use additional properties. These properties are stored in `knit.properties` file
+Some Knit [features](#features) use additional properties. These properties are stored in `knit.properties` file
 that is located in the same directory as the corresponding markdown file. Knit tool also looks for the properties
 file in all the parent directories up to the root directory (see [Optional parameters](#optional-parameters)).
 This allows for fine-grained control and inheritance of properties in different parts of the project. 
