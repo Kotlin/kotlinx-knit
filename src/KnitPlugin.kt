@@ -29,7 +29,7 @@ class KnitPlugin : Plugin<Project> {
             it.group = TASK_GROUP
             it.dependsOn(knitPrepare)
         }
-        tasks.register("check") {
+        tasks.named("check").configure {
             it.dependsOn(knitCheck)
         }
     }
