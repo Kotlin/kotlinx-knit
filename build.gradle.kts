@@ -2,12 +2,14 @@
  * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
+import com.gradle.publish.*
 import kotlinx.knit.build.*
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka") apply false
+    id("com.gradle.plugin-publish") apply false
     `java-gradle-plugin`
     `maven-publish`
 }
@@ -57,14 +59,31 @@ allprojects {
 // ---------- This root project -- Gradle plugin ----------
 
 apply(plugin = "org.gradle.java-gradle-plugin")
+apply(plugin = "com.gradle.plugin-publish")
+
+extensions.getByType(PluginBundleExtension::class).apply {
+    website = "https://github.com/Kotlin/kotlinx-knit"
+    vcsUrl = "https://github.com/Kotlin/kotlinx-knit"
+    tags = listOf("kotlin", "documentation", "markdown")
+}
 
 gradlePlugin {
     plugins {
-        create("knit") {
-            id = "kotlinx-knit"
+        create("kotlinx-knit") {
+            // This is a fully-qualified plugin id, short id of 'kotlinx-knit' is added manually in resources
+            id = "org.jetbrains.kotlinx.knit"
             implementationClass = "kotlinx.knit.KnitPlugin"
+            displayName = "Knit documentation plugin"
+            description = "Produces Kotlin source example files and tests from markdown documents with embedded snippets of Kotlin code"
         }
     }
+}
+
+val publishPlugins by tasks.getting(PublishTask::class)
+
+val deploy: Task by tasks.creating {
+    dependsOn(getTasksByName("publish", true))
+    dependsOn(publishPlugins)
 }
 
 val freemarkerVersion: String by project
@@ -75,6 +94,6 @@ dependencies {
     implementation(project(":kotlinx-knit-test"))
 }
 
-val test by tasks.getting(AbstractTestTask::class) {
+val test: Task by tasks.getting {
     dependsOn(tasks.findByPath(":kotlinx-knit-test:dokka"))
 }

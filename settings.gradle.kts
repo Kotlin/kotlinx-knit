@@ -7,6 +7,7 @@ include("kotlinx-knit-test")
 
 val kotlinVersion: String by settings
 val dokkaVersion: String by settings
+val pluginPublishVersion: String by settings
 
 pluginManagement {
     resolutionStrategy {
@@ -15,6 +16,7 @@ pluginManagement {
             when {
                 id.startsWith("org.jetbrains.kotlin.") -> useVersion(kotlinVersion)
                 id == "org.jetbrains.dokka" -> useVersion(dokkaVersion)
+                id == "com.gradle.plugin-publish" -> useVersion(pluginPublishVersion)
             }
         }
     }
