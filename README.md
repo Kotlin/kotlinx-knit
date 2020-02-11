@@ -62,7 +62,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
 Knit is a Gradle plugin that is added to the `build.gradle` in the following way:
 
 ```groovy        
-ext.knit_version = "0.1.0"
+ext.knit_version = "0.1.1"
 
 buildscript {
     repositories {
