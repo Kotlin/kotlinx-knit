@@ -59,22 +59,22 @@ regular tools. Specific supported patterns and directives are explained in [Feat
 
 ## Setup
 
-Knit is a Gradle plugin that is added to the `build.gradle` in the following way:
+Knit is a Gradle plugin that is published to 
+[JCenter](https://bintray.com/bintray/jcenter?filterByPkgName=kotlinx.knit) and
+[Maven Central](https://search.maven.org/artifact/org.jetbrains.kotlinx/kotlinx-knit). 
+Add it to the `build.gradle` in the following way:
 
 ```groovy        
-ext.knit_version = "0.1.1"
-
 buildscript {
-    repositories {
-        maven { url 'https://dl.bintray.com/kotlin/kotlinx' }
-    }
     dependencies {
-        classpath "org.jetbrains.kotlinx:kotlinx-knit:$knit_version"
+        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1.1"
     }
 }
                     
 apply plugin: 'kotlinx-knit'
 ```               
+
+> The build must apply 'kotlin' plugin or, at least, 'base' plugin before 'kotlinx-knit'.
 
 ### Tasks
 
@@ -329,7 +329,7 @@ artifact that you need to add to your test dependencies to compile and run the r
 
 ```groovy
 dependencies {
-    testImplementation "org.jetbrains.kotlinx:kotlinx-knit-test:$knit_version"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-knit-test"
 }
 ``` 
 
