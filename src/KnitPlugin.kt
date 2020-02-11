@@ -10,9 +10,11 @@ import org.gradle.api.tasks.*
 import java.io.*
 
 const val TASK_GROUP = "documentation"
+const val DEPENDENCY_GROUP = "org.jetbrains.kotlinx"
 
 class KnitPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
+        // Create tasks
         extensions.create("knit", KnitPluginExtension::class.java)
         val knitPrepare = tasks.register("knitPrepare", DefaultTask::class.java) {
             it.description =  "Prepares dependencies for Knit tool"
@@ -31,6 +33,20 @@ class KnitPlugin : Plugin<Project> {
         }
         tasks.named("check").configure {
             it.dependsOn(knitCheck)
+        }
+        // Configure default version resolution for 'kotlinx-knit-test'
+        val pluginVersion = rootProject.buildscript.configurations.findByName("classpath")
+            ?.allDependencies?.find { it.group == DEPENDENCY_GROUP && it.name == "kotlinx-knit" }?.version
+        println("Plugin version: $pluginVersion")
+        if (pluginVersion != null) {
+            configurations.all { configuration ->
+                configuration.resolutionStrategy.eachDependency { dependency ->
+                    val requested = dependency.requested
+                    if (requested.group == DEPENDENCY_GROUP && requested.name == "kotlinx-knit-test") {
+                        dependency.useVersion(pluginVersion)
+                    }
+                }
+            }
         }
     }
 }
