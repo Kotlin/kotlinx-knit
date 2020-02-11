@@ -27,7 +27,7 @@ allprojects {
         testImplementation(kotlin("test-junit"))
     }
     
-    tasks.withType<KotlinCompile>().configureEach {
+    tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
             languageVersion = "1.3"
             jvmTarget = "1.8"
@@ -48,10 +48,10 @@ allprojects {
         publications {
             create<MavenPublication>("maven") {
                 from(components["java"])
-                mavenCentralMetadata()
                 mavenCentralArtifacts(project, project.sourceSets.main.allSource)
             }
         }
+        mavenCentralMetadata()
         bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "kotlinx.knit")
     }
 }
