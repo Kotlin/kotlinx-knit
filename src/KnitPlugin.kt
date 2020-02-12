@@ -43,7 +43,7 @@ class KnitPlugin : Plugin<Project> {
             configurations.all { configuration ->
                 configuration.resolutionStrategy.eachDependency { dependency ->
                     val requested = dependency.requested
-                    if (requested.group == DEPENDENCY_GROUP && requested.name == "kotlinx-knit-test") {
+                    if (requested.group == DEPENDENCY_GROUP && requested.name == "kotlinx-knit-test" && requested.version == null) {
                         dependency.useVersion(pluginVersion)
                     }
                 }
