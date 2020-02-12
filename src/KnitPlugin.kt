@@ -4,6 +4,7 @@
 
 package kotlinx.knit
 
+import org.apache.log4j.*
 import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.tasks.*
@@ -37,7 +38,7 @@ class KnitPlugin : Plugin<Project> {
         // Configure default version resolution for 'kotlinx-knit-test'
         val pluginVersion = rootProject.buildscript.configurations.findByName("classpath")
             ?.allDependencies?.find { it.group == DEPENDENCY_GROUP && it.name == "kotlinx-knit" }?.version
-        println("Plugin version: $pluginVersion")
+        Logger.getLogger(KnitPlugin::class.java).debug("Plugin version: $pluginVersion")
         if (pluginVersion != null) {
             configurations.all { configuration ->
                 configuration.resolutionStrategy.eachDependency { dependency ->
