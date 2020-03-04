@@ -1,5 +1,10 @@
 # Change log for kotlinx-knit
 
+## Version 0.1.3
+
+* Kotlin 1.3.70.
+* Set JVM target to 1.6.
+
 ## Version 0.1.2
 
 * Configure default version resolution for 'kotlinx-knit-test'.

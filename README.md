@@ -67,7 +67,7 @@ Add it to the `build.gradle` in the following way:
 ```groovy        
 buildscript {
     dependencies {
-        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1.2"
+        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.1.3"
     }
 }
                     
