@@ -1,8 +1,8 @@
-import org.jetbrains.dokka.gradle.*
+plugins {
+    id("org.jetbrains.dokka")
+}
 
-apply(plugin = "org.jetbrains.dokka")
-
-val dokka by tasks.getting(DokkaTask::class) {
+tasks.dokka {
     outputFormat = "jekyll"
     outputDirectory = "$buildDir/dokka"
 }
