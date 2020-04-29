@@ -26,9 +26,9 @@ allprojects {
         implementation(kotlin("stdlib-jdk8"))
         testImplementation(kotlin("test-junit"))
     }
-    
+
     tasks.withType<KotlinCompile> {
-        kotlinOptions.apply {
+        kotlinOptions {
             languageVersion = "1.3"
             jvmTarget = "1.6"
             allWarningsAsErrors = true
@@ -43,7 +43,7 @@ allprojects {
 
     // Set version when deploying
     properties["DeployVersion"]?.let { version = it }
-    
+
     publishing {
         publications {
             create<MavenPublication>("maven") {
@@ -61,7 +61,7 @@ allprojects {
 apply(plugin = "org.gradle.java-gradle-plugin")
 apply(plugin = "com.gradle.plugin-publish")
 
-extensions.getByType(PluginBundleExtension::class).apply {
+extensions.configure(PluginBundleExtension::class) {
     website = "https://github.com/Kotlin/kotlinx-knit"
     vcsUrl = "https://github.com/Kotlin/kotlinx-knit"
     tags = listOf("kotlin", "documentation", "markdown")
