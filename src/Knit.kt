@@ -151,7 +151,9 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 postTocText += inLine
             }
             when (directive?.name) {
-                null, END_DIRECTIVE -> { /* do nothing, END works like NOP, too */ }
+                null, END_DIRECTIVE -> {
+                    /* do nothing, END works like NOP, too */
+                }
                 TOC_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isEmpty()) { "$TOC_DIRECTIVE directive must not have parameters" }
@@ -208,7 +210,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     val param = directive.param
                     if (testLines.isEmpty()) {
                         if (directive.singleLine) {
-                            require(param.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $testStartLang block or contain test parameter"}
+                            require(param.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $testStartLang block or contain test parameter" }
                         } else
                             testLines += readUntil(DIRECTIVE_END)
                     } else {
@@ -288,7 +290,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     knitAutonumberIndex[key] = index + 1
                 }
                 val file = File(markdownFile.parentFile, path)
-                require(files.add(file)) { "Duplicate file: $file"}
+                require(files.add(file)) { "Duplicate file: $file" }
                 log.info("Knitting $file ...")
                 val outLines = arrayListOf<String>()
                 val fileIncludes = arrayListOf<Include>()
@@ -445,11 +447,12 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
     var skip = false
     var putBackLine: String? = null
 
-    val outText: MutableList<String> get() = when (markdownPart) {
-        MarkdownPart.PRE_TOC -> preTocText
-        MarkdownPart.POST_TOC -> postTocText
-        else -> throw IllegalStateException("Wrong state: $markdownPart")
-    }
+    val outText: MutableList<String>
+        get() = when (markdownPart) {
+            MarkdownPart.PRE_TOC -> preTocText
+            MarkdownPart.POST_TOC -> postTocText
+            else -> throw IllegalStateException("Wrong state: $markdownPart")
+        }
 
     override fun readLine(): String? {
         putBackLine?.let {

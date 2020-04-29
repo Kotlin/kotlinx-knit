@@ -11,7 +11,7 @@ import kotlin.test.*
 class DiffTest {
     private fun compute(oldLines: List<String>, newLines: List<String>): String? =
         computeLinesDiff(oldLines, newLines).diff?.joinToString("\n")
-    
+
     @Test
     fun testDiffSame() {
         assertEquals(
@@ -240,6 +240,7 @@ class DiffTest {
                 repeat(k) { append('a' + rnd.nextInt(26)) }
             }
         }
+
         val oldLines = rndLines()
         val newLines = rndLines()
         assertNull(compute(oldLines, newLines))

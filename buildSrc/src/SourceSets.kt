@@ -21,4 +21,6 @@ val NamedDomainObjectProvider<SourceSet>.allSource: SourceDirectorySet
 
 var SourceDirectorySet.dir: String
     get() = srcDirs().joinToString(",")
-    set(value) { setSrcDirs(value.split(",")) }
+    set(value) {
+        setSrcDirs(value.split(","))
+    }

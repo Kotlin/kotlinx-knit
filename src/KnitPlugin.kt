@@ -18,7 +18,7 @@ class KnitPlugin : Plugin<Project> {
         // Create tasks
         extensions.create("knit", KnitPluginExtension::class.java)
         val knitPrepare = tasks.register("knitPrepare", DefaultTask::class.java) {
-            it.description =  "Prepares dependencies for Knit tool"
+            it.description = "Prepares dependencies for Knit tool"
             it.group = TASK_GROUP
         }
         val knitCheck = tasks.register("knitCheck", KnitTask::class.java) {
@@ -94,7 +94,7 @@ open class KnitPluginExtension {
         siteRoot = siteRoot,
         moduleRoots = moduleRoots,
         moduleMarkers = moduleMarkers,
-        moduleDocs =  moduleDocs,
+        moduleDocs = moduleDocs,
         files = files,
         rootDir = rootDir,
         check = check

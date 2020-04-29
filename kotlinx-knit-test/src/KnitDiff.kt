@@ -35,6 +35,7 @@ public fun computeLinesDiff(oldLines: List<String>, newLines: List<String>, limi
     var pHdr = -1
     var d1: Diff by Delegates.notNull()
     var d2: Diff by Delegates.notNull()
+
     // helper function
     fun flushHeader() {
         if (pHdr < 0) return

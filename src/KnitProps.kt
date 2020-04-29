@@ -111,7 +111,7 @@ private object ResourcesProps : PropsLocation() {
     override fun Configuration.initTemplate() {
         setClassLoaderForTemplateLoading(classLoader, "")
     }
-    
+
     override fun open(name: String): InputStream =
         classLoader.getResourceAsStream(name) ?: cannotFind(name)
 
@@ -129,7 +129,7 @@ private class DirectoryProps(private val dir: File) : PropsLocation() {
     override fun Configuration.initTemplate() {
         setDirectoryForTemplateLoading(dir)
     }
-    
+
     override fun open(name: String): InputStream =
         File(dir, name.replace('/', File.separatorChar)).inputStream()
 

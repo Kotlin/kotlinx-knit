@@ -7,8 +7,11 @@ package kotlinx.knit.test
 import java.io.*
 
 private val STDOUT_ENABLED_DEFAULT =
-    try { java.lang.Boolean.getBoolean("kotlinx.knit.test.stdout") }
-    catch (e: SecurityException) { false }
+    try {
+        java.lang.Boolean.getBoolean("kotlinx.knit.test.stdout")
+    } catch (e: SecurityException) {
+        false
+    }
 
 /**
  * Captures stdout and stderr of the specified block of code.
