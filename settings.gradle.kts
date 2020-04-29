@@ -5,19 +5,14 @@
 rootProject.name = "kotlinx-knit"
 include("kotlinx-knit-test")
 
-val kotlinVersion: String by settings
-val dokkaVersion: String by settings
-val pluginPublishVersion: String by settings
-
 pluginManagement {
-    resolutionStrategy {
-        eachPlugin {
-            val id = requested.id.id
-            when {
-                id.startsWith("org.jetbrains.kotlin.") -> useVersion(kotlinVersion)
-                id == "org.jetbrains.dokka" -> useVersion(dokkaVersion)
-                id == "com.gradle.plugin-publish" -> useVersion(pluginPublishVersion)
-            }
-        }
+    plugins {
+        val kotlinVersion: String by extra
+        val dokkaVersion: String by extra
+        val pluginPublishVersion: String by extra
+
+        kotlin("jvm") version kotlinVersion
+        id("org.jetbrains.dokka") version dokkaVersion
+        id("com.gradle.plugin-publish") version pluginPublishVersion
     }
 }
