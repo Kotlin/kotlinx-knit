@@ -61,6 +61,20 @@ public fun List<String>.verifyOutputLines(vararg expected: String) {
     }
 }
 
+/**
+ * Verifies that this lines captured by [captureOutput] start with the same list as [expected] one
+ * and throws exception if not. Additional lines in the output are ignored. This is useful for
+ * testing that the exception with the appropriate message was thrown
+ */
+public fun List<String>.verifyOutputLinesStart(vararg expected: String) {
+    val expectedLines = expected.toList()
+    val prefix = subList(0, minOf(size, expected.size))
+    if (prefix != expectedLines) {
+        val diff = computeLinesDiff(expectedLines, this)
+        throw Exception("Output starts with different lines than expected, $diff")
+    }
+}
+
 private object NullOut : PrintStream(NullOutputStream())
 
 private class NullOutputStream : OutputStream() {

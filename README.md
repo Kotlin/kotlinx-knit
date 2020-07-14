@@ -50,6 +50,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
   * [Tests](#tests)
     * [Hidden test](#hidden-test)
     * [Custom test predicate](#custom-test-predicate)
+    * [Output comparison mode](#output-comparison-mode)
     * [Test template](#test-template)
   * [API references](#api-references)
     * [Dokka setup](#dokka-setup)
@@ -353,6 +354,14 @@ parameter to `TEST` directive operating over `lines: List<String>`, for example,
 to check that the example had output an integer between 1 and 100 you can write:
  
     <!--- TEST lines.single().toInt() in 1..100 -->   
+
+#### Output comparison mode
+
+A different output comparison mode can be specified by adding the name of the mode after the `TEST` directive. 
+The names of the modes are mapped to comparison functions via `test.mode.<mode-name>` properties, with
+`verifyOutputLines` function being used as a default. Other modes that are supported out of the box:
+
+* `LINES_START` &mdash; tests that output starts with the specified lines, skipping the rest of line, uses `verifyOutputLinesStart` function.
 
 #### Test template
 

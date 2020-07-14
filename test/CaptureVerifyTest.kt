@@ -29,5 +29,16 @@ class CaptureVerifyTest {
     private fun predicateMain() {
         println(42)
     }
+
+    @Test
+    fun testLinesStart() {
+        captureOutput("ExampleLinesStart01") { linesStartMain() }.verifyOutputLinesStart(
+            "Exception in thread \"main\" java.lang.IllegalStateException: The check has failed"
+        )
+    }
+
+    private fun linesStartMain() {
+        check(1 == 2) { "The check has failed" }
+    }
 }
 
