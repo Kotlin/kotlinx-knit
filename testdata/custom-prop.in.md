@@ -6,7 +6,7 @@ Here is some explanatory text
 fun result() = listOf("Hello", "World")
 ```                         
 
-> You can get full code [here](custom-prop/example-custom-01.kt).
+> You can get the full code [here](custom-prop/example-custom-01.kt).
 
 <!--- TEST
 Hello

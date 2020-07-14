@@ -6,10 +6,10 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](example-renumber/example-renumber-new.kt).
+> You can get the full code [here](example-renumber/example-renumber-new.kt).
 
 ```kotlin 
 fun foo() {}
 ```                         
 
-> You can get full code [here](example-renumber/example-renumber-other.kt).
+> You can get the full code [here](example-renumber/example-renumber-other.kt).

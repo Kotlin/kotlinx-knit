@@ -8,6 +8,6 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](test-predicate/example-predicate-01.kt).  
+> You can get the full code [here](test-predicate/example-predicate-01.kt).  
 
 <!--- TEST lines.single().toInt() in 1..100 -->

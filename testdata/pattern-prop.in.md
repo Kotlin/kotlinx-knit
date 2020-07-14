@@ -6,4 +6,4 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](pattern-prop/pattern-new.kt).
+> You can get the full code [here](pattern-prop/pattern-new.kt).

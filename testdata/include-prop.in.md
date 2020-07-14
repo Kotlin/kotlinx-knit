@@ -6,4 +6,4 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](include-prop/example-include-01.kt).
+> You can get the full code [here](include-prop/example-include-01.kt).

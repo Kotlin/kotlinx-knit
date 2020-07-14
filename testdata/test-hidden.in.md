@@ -8,7 +8,7 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](test-hidden/example-hidden-01.kt).  
+> You can get the full code [here](test-hidden/example-hidden-01.kt).  
 
 <!--- TEST
 Hello, world!

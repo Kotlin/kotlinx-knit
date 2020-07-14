@@ -6,4 +6,4 @@ fun main() {
 }
 ```                         
 
-> You can get full code [here](example-basic/example-basic-01.kt).
+> You can get the full code [here](example-basic/example-basic-01.kt).
