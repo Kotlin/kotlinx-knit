@@ -6,4 +6,4 @@ import kotlin.system.*
 fun exit(): Nothing = exitProcess(0)
 ```                         
 
-> You can get full code [here](example-include/example-include-01.kt).
+> You can get the full code [here](example-include/example-include-01.kt).

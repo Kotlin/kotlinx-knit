@@ -144,7 +144,7 @@ The Knit que to generate example source code is a markdown reference in round br
 to be generated. It must start with the value of `knit.dir` property (verbatim) followed by the example's
 file name, for example:       
 
-    > You can get full code [here](src/test/kotlin/example/example-basic-01.kt).
+    > You can get the full code [here](src/test/kotlin/example/example-basic-01.kt).
     
 The name of the example file must match a specific pattern. By default, this pattern's regex is
 `example-[a-zA-Z0-9-]+-##\\.kt`. It can be overridden via `knit.pattern` [property](#knit-properties).
@@ -152,11 +152,11 @@ The sequence of hashes (`#`) in the pattern matches any alpha-numeric sequence a
 be automatically consecutively numbered inside the markdown file. For example, you can add a
 new section of code at the beginning of the document and write in the markdown file:
 
-    > You can get full code [here](src/test/kotlin/example/example-basic-new.kt).
+    > You can get the full code [here](src/test/kotlin/example/example-basic-new.kt).
     
 After running `knit` task this line in the markdown file will get updated to:
 
-    > You can get full code [here](esrc/test/kotlin/example/example-basic-01.kt).
+    > You can get the full code [here](esrc/test/kotlin/example/example-basic-01.kt).
     
 The corresponding Kotlin file is also automatically created or updated as needed by `knit` task
 and will look like this:
@@ -188,7 +188,7 @@ functions as they are introduced. For example, the following markdown:
     }
     ```
 
-    > You can get full code [here](src/test/kotlin/example/example-merge-01.kt).
+    > You can get the full code [here](src/test/kotlin/example/example-merge-01.kt).
     
 Produces the following Kotlin source code when `knit` task is run:
 
@@ -244,7 +244,7 @@ directive before this example. The markdown documentation looks like this:
     fun exit(): Nothing = exitProcess(0)
     ```                         
     
-    > You can get full code [here](src/test/kotlin/example/example-include-01.kt).
+    > You can get the full code [here](src/test/kotlin/example/example-include-01.kt).
     
 The Knit directive is like HTML comment, so the reader of this specific piece of documentation will not
 see the `import` line, but the generated source-code example file will include it to get compiled properly:
@@ -294,7 +294,7 @@ it to get the test-case added. For example:
     }
     ```                         
     
-    > You can get full code [here](src/test/kotlin/example/example-basic-01.kt).  
+    > You can get the full code [here](src/test/kotlin/example/example-basic-01.kt).  
     
     This code prints:
     
