@@ -5,10 +5,10 @@ import org.junit.Test
 import kotlinx.knit.test.*
 
 class ${test.name} {
-<#list cases as case>
+<#list cases as case><#assign method = test["mode.${case.param}"]!"custom">
     @Test
     fun test${case.name}() {
-        captureOutput("${case.name}") { ${case.knit.package}.${case.knit.name}.main() }<#if case.param == "">.verifyOutputLines(
+        captureOutput("${case.name}") { ${case.knit.package}.${case.knit.name}.main() }<#if method != "custom">.${method}(
 <#list case.lines as line>
             "${line?j_string}"<#sep>,</#sep>
 </#list>
