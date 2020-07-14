@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.1.4
+
+* Support `TEST LINE_START`.
+
 ## Version 0.1.3
 
 * Kotlin 1.3.70.
