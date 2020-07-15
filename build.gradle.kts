@@ -96,4 +96,5 @@ dependencies {
 
 val test: Task by tasks.getting {
     dependsOn(tasks.findByPath(":kotlinx-knit-test:dokka"))
+    dependsOn(tasks.findByPath(":kotlinx-knit-test:dokkaHtml"))
 }

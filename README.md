@@ -381,7 +381,7 @@ functions similarly to how you do it from KDoc using markdown `[name]` reference
 #### Dokka setup
 
 In order to generate links to project's API documentation this documentation must be built using 
-[Dokka](https://github.com/Kotlin/dokka) in either `markdown` or `jekyll` format:
+[Dokka](https://github.com/Kotlin/dokka) in either `markdown`, `jekyll`, or `html` formats:
 
 ```groovy 
 dokka {
@@ -395,7 +395,7 @@ Website's root for Knit must be configured as shown below:
 ```
 knit {          
     // Required parameter
-    siteRoot = "https://example.com"  // website with project's API documentation
+    siteRoot = "https://example.com"  // website with project's API documentation without trailing /
     // Optional parameters (do not need specify them if below defaults are Ok) 
     moduleRoots = ["."] // list directories that contain project modules (subdir name == module name)
     moduleMarkers = ["build.gradle", "build.gradle.kts"] // marker files that distinguish module directories
@@ -406,7 +406,7 @@ knit {
 knitPrepare.dependsOn rootProject.getTasksByName("dokka", true)
 ```          
 
-The modules providing APIs must be in their separate directories named after the module name. For example,
+The modules providing APIs can be stored in separate directories named after the module name. For example,
 this project has [`kotlinx-knit-test`](kotlinx-knit-test) module in a separate directory. You can reference
 functions and classes declared there using a regular markdown link syntax and give instructions to Knit 
 tool to expand those links like this:
@@ -431,6 +431,11 @@ When you run `knit` task this markdown gets updated to:
     <!--- END -->
     
 Now the link is defined to point to `<siteRoot>/<moduleName>/<package>/<docs-file>`.    
+
+When the documentation is build by the root project of the module, then prepend `/` before the module name in 
+the `MODULE` directive:
+
+    <!--- MODULE /kotlinx-knit-test -->
 
 ### Table of contents
 

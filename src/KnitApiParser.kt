@@ -17,9 +17,10 @@ private const val MD_SUFFIX = ".md"
 
 private const val INDEX_HTML = "/index$HTML_SUFFIX"
 private const val INDEX_MD = "/index$MD_SUFFIX"
-private const val FUNCTIONS_SECTION_HEADER = "### Functions"
 
-private val REF_HTML_LINE_REGEX = Regex("<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>")
+private val FUNCTIONS_SECTION_HEADERS = listOf("### Functions", "<h3>Functions</h3>")
+
+private val REF_HTML_LINE_REGEX = Regex("(?:<h4>)?<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>(?:</h4>)?")
 private val REF_MD_LINE_REGEX = Regex("\\| \\[([a-zA-z0-9.]+)]\\(([a-z0-9_/.\\-]+)\\) \\|.*")
 
 // link ends with ".html"
@@ -53,14 +54,15 @@ private fun KnitContext.loadApiIndex(
     pkg: String,
     namePrefix: String = ""
 ): Map<String, MutableList<String>>? {
-    val fileName = "$docsRoot/$path$INDEX_MD"
+    val fileDir = rootDir / docsRoot / path
+    val file = findFile(fileDir, INDEX_MD, INDEX_HTML)
     val visited = mutableSetOf<String>()
     val map = HashMap<String, MutableList<String>>()
     var inFunctionsSection = false
-    withLineNumberReader(rootDir / fileName, ::LineNumberReader) {
+    withLineNumberReader(file, ::LineNumberReader) {
         while (true) {
             val line = readLine() ?: break
-            if (line == FUNCTIONS_SECTION_HEADER) inFunctionsSection = true
+            if (line in FUNCTIONS_SECTION_HEADERS) inFunctionsSection = true
             var (link, name) = matchRef(line) ?: continue
             if (link.startsWith("..")) continue // ignore cross-references
             val absLink = "$path/$link"
@@ -92,6 +94,10 @@ private fun KnitContext.loadApiIndex(
     } ?: return null // return null on failure
     return map
 }
+
+fun findFile(fileDir: File, vararg names: String): File =
+    names.map { fileDir / it }.firstOrNull { it.exists() } ?:
+        throw FileNotFoundException("Cannot find one of files ${names.joinToString(", ") { "'$it'" } } in $fileDir")
 
 fun KnitContext.processApiIndex(
     siteRoot: String,
