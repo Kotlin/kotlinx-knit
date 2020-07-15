@@ -39,7 +39,8 @@ fun verifyTestData(
         Files.copy(path, dir.resolve(path.fileName))
     }
     // run knit
-    assertTrue(runKnit(listOf(targetPath.toFile())), "Knit failed, see log")
+    val context = createDefaultContext(listOf(targetPath.toFile()), dir.toFile())
+    assertTrue(context.process(), "Knit failed, see log")
     // verify resulting files
     assertSameFile(Paths.get(outFile), targetPath)
     refs.filterIsInstance<FileRef.Expect>().forEach { ref ->

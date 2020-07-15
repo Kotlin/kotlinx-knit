@@ -63,10 +63,9 @@ fun main(args: Array<String>) {
         println("Usage: Knit <markdown-files>")
         exitProcess(1)
     }
-    if (!runKnit(args.map { File(it) })) exitProcess(2)
+    val context = createDefaultContext(args.map { File(it) })
+    if (!context.process()) exitProcess(2)
 }
-
-fun runKnit(files: List<File>): Boolean = createDefaultContext(files).process()
 
 fun KnitContext.process(): Boolean {
     while (!fileQueue.isEmpty()) {
@@ -219,8 +218,9 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 MODULE_DIRECTIVE -> {
                     requireSingleLine(directive)
-                    moduleName = directive.param
-                    docsRoot = findModuleRoot(moduleName) + "/" + moduleDocs + "/" + moduleName
+                    val isRoot = directive.param.startsWith('/')
+                    moduleName = if (isRoot) directive.param.substring(1) else directive.param
+                    docsRoot = findModuleRoot(isRoot, moduleName) + "/" + moduleDocs + "/" + moduleName
                 }
                 INDEX_DIRECTIVE -> {
                     requireSingleLine(directive)
@@ -520,8 +520,8 @@ fun KnitContext.writeLines(file: File, lines: List<String>) {
     }
 }
 
-fun KnitContext.findModuleRoot(name: String): String =
+fun KnitContext.findModuleRoot(isRoot: Boolean, name: String): String =
     moduleRoots
-        .map { "$it/$name" }
+        .map { if (isRoot) it else "$it/$name" }
         .firstOrNull { dir -> moduleMarkers.any { (rootDir / "$dir/$it").exists() } }
-        ?: throw IllegalArgumentException("Module $name is not found in any of the module root dirs")
+        ?: throw IllegalArgumentException("${if (isRoot) "Root module" else "Module"} $name is not found in any of the module root dirs")

@@ -82,19 +82,21 @@ open class KnitTask : DefaultTask() {
 }
 
 open class KnitPluginExtension {
-    var siteRoot: String? = null
-    var moduleRoots: List<String> = defaultModuleRoots
-    var moduleMarkers: List<String> = defaultModuleMarkers
-    var moduleDocs: String = defaultModuleDocs
+    var siteRoot: String? = globalDefaults.siteRoot
+    var moduleRoots: List<String> = globalDefaults.moduleRoots
+    var moduleMarkers: List<String> = globalDefaults.moduleMarkers
+    var moduleDocs: String = globalDefaults.moduleDocs
     var files: FileCollection? = null
     var rootDir: File? = null
 
     fun createContext(files: Collection<File>, rootDir: File, check: Boolean) = KnitContext(
         log = LoggerLog(),
-        siteRoot = siteRoot,
-        moduleRoots = moduleRoots,
-        moduleMarkers = moduleMarkers,
-        moduleDocs =  moduleDocs,
+        globals = KnitGlobals(
+            siteRoot = siteRoot,
+            moduleRoots = moduleRoots,
+            moduleMarkers = moduleMarkers,
+            moduleDocs =  moduleDocs
+        ),
         files = files,
         rootDir = rootDir,
         check = check
