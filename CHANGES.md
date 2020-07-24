@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.1.6
+
+* Support 'PREFIX' directive to append code to the beginning of the example file.
+
 ## Version 0.1.5
 
 * Support `html` output format of Dokka.
