@@ -31,6 +31,7 @@ const val TOC_DIRECTIVE = "TOC"
 const val END_DIRECTIVE = "END"
 const val TOC_REF_DIRECTIVE = "TOC_REF"
 const val INCLUDE_DIRECTIVE = "INCLUDE"
+const val PREFIX_DIRECTIVE = "PREFIX"
 const val CLEAR_DIRECTIVE = "CLEAR"
 const val TEST_DIRECTIVE = "TEST"
 
@@ -127,6 +128,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     val tocLines = arrayListOf<String>()
     val includes = arrayListOf<Include>()
     val codeStartLang = CODE_START + props.getValue(KNIT_LANGUAGE_PROP)
+    val prefixLines = arrayListOf<String>()
     val codeLines = arrayListOf<String>()
     val testStartLang = TEST_START + props.getValue(TEST_LANGUAGE_PROP)
     val testLines = arrayListOf<String>()
@@ -186,6 +188,16 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                             readUntilTo(DIRECTIVE_END, include.lines)
                         }
                         includes += include
+                    }
+                    continue@mainLoop
+                }
+                PREFIX_DIRECTIVE -> {
+                    require(directive.param.isEmpty()) { "$PREFIX_DIRECTIVE directive must not have parameters" }
+                    if (directive.singleLine) {
+                        prefixLines += codeLines
+                        codeLines.clear()
+                    } else {
+                        readUntilTo(DIRECTIVE_END, prefixLines)
                     }
                     continue@mainLoop
                 }
@@ -290,7 +302,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 val file = File(markdownFile.parentFile, path)
                 require(files.add(file)) { "Duplicate file: $file"}
                 log.info("Knitting $file ...")
-                val outLines = arrayListOf<String>()
+                val outLines = prefixLines.toMutableList()
                 val fileIncludes = arrayListOf<Include>()
                 // load & process template of the main include
                 val knitName = fileName.toKnitName()
@@ -301,6 +313,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 for (code in codeLines) {
                     outLines += code.replace("System.currentTimeMillis()", "currentTimeMillis()")
                 }
+                prefixLines.clear()
                 codeLines.clear()
                 writeLinesIfNeeded(file, outLines)
                 lastKnit = KnitRef(props, knitName)

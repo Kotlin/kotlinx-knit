@@ -47,6 +47,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
     * [Custom Knit template](#custom-knit-template)
     * [Include directive](#include-directive)
     * [Advanced include](#advanced-include)
+    * [Prefix directive](#prefix-directive)
   * [Tests](#tests)
     * [Hidden test](#hidden-test)
     * [Custom test predicate](#custom-test-predicate)
@@ -262,12 +263,43 @@ fun exit(): Nothing = exitProcess(0)
 #### Advanced include
 
 A single piece of code can be included into multiple examples (as opposed to the next example only)
-by specifying regex patten of the example name right after `INCLUDE` directive as its parameter. 
+by specifying regex patten of the example name right after the `INCLUDE` directive as its parameter. 
 
 With the pattern the `INCLUDE` directive can also be specified on a single line, without the
 code inside of it. In this case, the code to be included is taken from the previously tripple-backquoted
 Kotlin source code before it. This way, the code snippet can be introduced and shown to the reader of
 the documentation and then included into the several subsequent examples.  
+
+#### Prefix directive
+
+If you need to prefix the example file with certain lines, for example, to specify a file-level annotation, then
+write the block of code normally and follow it with the `PREFIX` directive. All the previously written code will
+be added to the beginning of the resulting example file instead of the end of it. So this input:
+
+    ```kotlin 
+    @file:JvmName("ExampleKt")
+    ```      
+    
+    <!--- PREFIX -->
+    
+    ```kotlin
+    fun example() {}
+    ```                   
+    
+    > You can get the full code [here](example-prefix/example-prefix-01.kt).
+    
+Produces this example file:
+
+```kotlin
+@file:JvmName("ExampleKt")
+// This file was automatically generated from example-prefix.in.md by Knit tool. Do not edit.
+package com.example.examplePrefix01
+
+fun example() {}
+```          
+
+Similarly to the `INCLUDE` directive you can put the code inside the `PREFIX` directive, so that the reader
+does not see it (because it is a comment), but it affects the resulting example file.
 
 ### Tests
 
