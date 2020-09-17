@@ -418,13 +418,11 @@ private fun requireSingleLine(directive: Directive) {
     require(directive.singleLine) { "${directive.name} directive must end on the same line with '$DIRECTIVE_END'" }
 }
 
+private const val skippedTocSymbols = "\\,`*{}[]()/#+.!"
+
 fun makeSectionRef(name: String): String = name
     .replace(' ', '-')
-    .replace(".", "")
-    .replace(",", "")
-    .replace("(", "")
-    .replace(")", "")
-    .replace("`", "")
+    .replace(("[" + Regex.escape(skippedTocSymbols) + "]").toRegex(), "")
     .toLowerCase()
 
 class Include(val regex: Regex, val lines: MutableList<String> = arrayListOf())
