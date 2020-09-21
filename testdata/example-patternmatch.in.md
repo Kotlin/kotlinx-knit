@@ -18,6 +18,14 @@
 // prefix the third example
 -->
 
+<!--- SUFFIX .*01.*
+// suffix the first example
+--> 
+
+<!--- SUFFIX .*02.*
+// suffix the second example
+--> 
+
 ```kotlin
 fun theFirstExample() {}
 ```

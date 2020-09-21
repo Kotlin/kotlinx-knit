@@ -324,6 +324,29 @@ Similarly to the `INCLUDE` directive you can put the code inside the `PREFIX` di
 does not see it (because it is a comment), but it affects the resulting example file. A parameter with the file
 name pattern can be also added to the `PREFIX` directive to affect multiple examples. 
 
+### Suffix directive
+
+The `SUFFIX` queues a piece of code to be added to the end of the example file and supports all the same features
+as `INCLUDE` and `PREFIX`, including patterns. This way, for example, using a combination of `INCLUDE` and `SUFFIX`, 
+a specific common scaffolding can be defined around several code examples mathcing a specific name pattern.
+
+    <!--- INCLUDE .*print.*
+    fun main() { 
+    -->
+    <!--- SUFFIX .*print.*
+        .let { println(it) }
+    }    
+    -->
+    
+    The following expression:
+    
+    ```kotlin
+    "OW".replace('W', 'K')
+    ```
+    
+    > You can get the full code [here](src/test/kotlin/example/example-print-01.kt).
+ 
+
 ### Tests
 
 Knit tool can also automatically generate tests. To set it up you to be generating [example files](#example-files) first
