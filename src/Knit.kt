@@ -468,6 +468,9 @@ class Directive(
     val singleLine: Boolean
 )
 
+private val skipWhitespace: (Char) -> Boolean = { it.isWhitespace() }
+private val kotlinCommentPrefixes = listOf("// ", "* ", "//", "*")
+
 enum class InputFileType(
     val extension: String,
     val skipLeadingChars: (Char) -> Boolean = { false },
@@ -475,11 +478,8 @@ enum class InputFileType(
     val ignoreTextRefs: Boolean = false
 ) {
     MARKDOWN(".md"),
-    KOTLIN(".kt",
-        skipLeadingChars = { it.isWhitespace() },
-        directivePrefix = listOf("// ", "* ", "//", "*"),
-        ignoreTextRefs = true
-    ),
+    KOTLIN(".kt", skipWhitespace, kotlinCommentPrefixes, ignoreTextRefs = true),
+    KOTLIN_SCRIPT(".kts", skipWhitespace, kotlinCommentPrefixes, ignoreTextRefs = true),
     UNKNOWN("") // works just like MARKDOWN
 }
 
