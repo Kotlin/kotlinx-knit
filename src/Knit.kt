@@ -120,12 +120,9 @@ class KnitIncludeEnv(
     val knit = props.getMap("knit") + mapOf("name" to knitName)
 }
 
-fun KnitConfig.loadMainInclude(file: File, props: KnitProps, knitName: String): Include {
-    val include = Include(nameRegex)
-    include.lines += props.loadTemplateLines(KNIT_INCLUDE_PROP, KnitIncludeEnv(file, props, knitName))
-    include.lines += ""
-    return include
-}
+fun loadMainInclude(file: File, props: KnitProps, knitName: String): List<String> =
+    props.loadTemplateLines(KNIT_INCLUDE_PROP, KnitIncludeEnv(file, props, knitName)) +
+    "" // empty line after the main include
 
 // Reference to knitted example's full package (pkg.name)
 class KnitRef(val props: KnitProps, val name: String)
@@ -183,22 +180,44 @@ fun KnitContext.knit(inputFile: File): Boolean {
                 }
                 require(files.add(file)) { "Duplicate file: $file"}
                 log.info("Knitting $file ...")
+                // -- PREFIX --
                 val outLines = prefixLines.toMutableList()
-                val fileIncludes = arrayListOf<Include>()
-                // load & process template of the main include
+                includes
+                    .filter { it.type == IncludeType.PREFIX && it.nameRegex.matches(file.name) }
+                    .forEach { outLines += it.lines }
+                // -- Load & process template of the main include --
                 val knitName = file.name.toKnitName()
-                fileIncludes += loadMainInclude(inputFile, props, knitName)
-                fileIncludes += includes.filter { it.nameRegex.matches(file.name) }
-                for (include in fileIncludes) outLines += include.lines
+                outLines += loadMainInclude(inputFile, props, knitName)
+                // -- INCLUDE --
+                includes
+                    .filter { it.type == IncludeType.INCLUDE && it.nameRegex.matches(file.name) }
+                    .forEach { outLines += it.lines }
+                // -- The main code
                 if (outLines.last().isNotBlank()) outLines += ""
                 for (code in codeLines) {
                     outLines += code.replace("System.currentTimeMillis()", "currentTimeMillis()")
                 }
+                // -- Finalize and write --
                 prefixLines.clear()
                 codeLines.clear()
                 writeLinesIfNeeded(file, outLines)
                 lastKnit = KnitRef(props, knitName)
             }
+            // Processes INCLUDE and PREFIX directives with pattern
+            fun saveInclude(directive: Directive, type: IncludeType) {
+                require(directive.param.isNotEmpty())
+                // Note: Trim legacy .*/ prefix that is not needed in INCLUDE patterns anymore, only name matches
+                val namePattern = directive.param.removePrefix(".*/")
+                val include = Include(type, Regex(namePattern))
+                if (directive.singleLine) {
+                    include.lines += codeLines
+                    codeLines.clear()
+                } else {
+                    readUntilTo(DIRECTIVE_END, include.lines)
+                }
+                includes += include
+            }
+            // Match directives
             when (directive?.name) {
                 null, END_DIRECTIVE -> { /* do nothing, END works like NOP, too */ }
                 TOC_DIRECTIVE -> {
@@ -228,26 +247,20 @@ fun KnitContext.knit(inputFile: File): Boolean {
                         require(!directive.singleLine) { "$INCLUDE_DIRECTIVE directive without parameters must not be single line" }
                         readUntilTo(DIRECTIVE_END, codeLines)
                     } else {
-                        // Note: Trim legacy .*/ prefix that is not needed in INCLUDE patterns anymore, only name matches
-                        val namePattern = directive.param.removePrefix(".*/")
-                        val include = Include(Regex(namePattern))
-                        if (directive.singleLine) {
-                            include.lines += codeLines
-                            codeLines.clear()
-                        } else {
-                            readUntilTo(DIRECTIVE_END, include.lines)
-                        }
-                        includes += include
+                        saveInclude(directive, IncludeType.INCLUDE)
                     }
                     continue@mainLoop
                 }
                 PREFIX_DIRECTIVE -> {
-                    require(directive.param.isEmpty()) { "$PREFIX_DIRECTIVE directive must not have parameters" }
-                    if (directive.singleLine) {
-                        prefixLines += codeLines
-                        codeLines.clear()
+                    if (directive.param.isEmpty()) {
+                        if (directive.singleLine) {
+                            prefixLines += codeLines
+                            codeLines.clear()
+                        } else {
+                            readUntilTo(DIRECTIVE_END, prefixLines)
+                        }
                     } else {
-                        readUntilTo(DIRECTIVE_END, prefixLines)
+                        saveInclude(directive, IncludeType.PREFIX)
                     }
                     continue@mainLoop
                 }
@@ -459,7 +472,13 @@ fun makeSectionRef(name: String): String = name
     .replace(("[" + Regex.escape(skippedTocSymbols) + "]").toRegex(), "")
     .toLowerCase()
 
-class Include(val nameRegex: Regex, val lines: MutableList<String> = arrayListOf())
+enum class IncludeType { INCLUDE, PREFIX }
+
+class Include(
+    val type: IncludeType,
+    val nameRegex: Regex,
+    val lines: MutableList<String> = arrayListOf()
+)
 
 class Directive(
     val name: String,

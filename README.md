@@ -321,7 +321,8 @@ fun example() {}
 ```          
 
 Similarly to the `INCLUDE` directive you can put the code inside the `PREFIX` directive, so that the reader
-does not see it (because it is a comment), but it affects the resulting example file.
+does not see it (because it is a comment), but it affects the resulting example file. A parameter with the file
+name pattern can be also added to the `PREFIX` directive to affect multiple examples. 
 
 ### Tests
 
