@@ -10,16 +10,17 @@ This is a tool that produces Kotlin source example files and tests from markdown
 with embedded snippets of Kotlin code. It also helps to add links to the API documentation website into the
 documents and has a few other helpful markdown-management features.
 
-Knit tool is a [Gradle](https://gradle.org/) plugin that processes markdown files, updates them, and writes
-additional example and test files, which are committed to the VCS. The overall workflow is:
+Knit tool is a [Gradle](https://gradle.org/) plugin that processes markdown (`.md`) files and Kotlin (`.kt`/`.kts`) files 
+with markdown KDoc comments, updates them, and writes additional example and test files, 
+which are committed to the VCS. The overall workflow is:
 
-1. Write or update documentation in markdown files (`*.md`).
-2. Run `gradlew knit` to update markdown files, generate source code samples and tests.
+1. Write or update documentation in markdown files (`.md`) or in source files (`.kt`/`.kts`).
+2. Run `gradlew knit` to update markdown and source files, generate additional source code samples and tests.
 3. Commit to VCS.
 4. Generated files are automatically verified on subsequent project builds.
 
-Knit does not really parse markdown format or HTML, but understands certain patterns and _directives_.
-Directives must always start at the beginning of the line and have the following general format for
+Knit does not really parse markdown format or HTML, but understands certain Knit markup patterns and _directives_.
+Directives in markdown files must always start at the beginning of the line and have the following general format for
 single-line directives:
 
     <!--- <directive> [<parameters>] -->
@@ -31,7 +32,9 @@ or the following format for multi-line directives:
     -->
 
 Directives look like HTML comments, so their contents are not visible when the markdown is rendered by
-regular tools. Specific supported patterns and directives are explained in [Features](#features) section. 
+regular tools. Specific makrdown pattern and directives supported by Knit are explained in the [Features](#features) section.
+For inclusion of directives into Kotlin source (`.kt`/`.kts`) files see 
+the [Kotlin Source Comments](#kotlin-source-comments) section.  
 
 ## Contents
 
@@ -54,6 +57,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
     * [Custom test predicate](#custom-test-predicate)
     * [Output comparison mode](#output-comparison-mode)
     * [Test template](#test-template)
+  * [Kotlin Source Comments](#kotlin-source-comments)
   * [API references](#api-references)
     * [Dokka setup](#dokka-setup)
   * [Table of contents](#table-of-contents)
@@ -96,9 +100,11 @@ Additional optional parameters can be specified via `knit { ... }` DSL with the 
 ```groovy
 knit {
     rootDir = project.rootDir // project root dir
-    // Custom set of markdown files to process (default as shown below)
+    // Custom set of input files to process (default as shown below)
     files = fileTree(project.rootDir) {
         include '**/*.md'
+        include '**/*.kt'
+        include '**/*.kts'
         exclude '**/build/**'
         exclude '**/.gradle/**'
     }
@@ -421,10 +427,51 @@ You can use arbitrary `test.xxx` [properties](#knit-properties) in the test temp
 The default template assumes that example code contains `main()` function and produces some output on the
 console. By tweaking the template you can test other kinds of examples in your markdown documentation.  
 
+### Kotlin Source Comments
+
+Knit directives and other Knit-recognized markdown markup can be embedded into documentation of 
+Kotlin source (`.kt`/`.kts`) files. There are several ways to embed Knit markup into Kotlin sources.
+
+Knit markup can be nested inside regular /* ... */ comment block, directives starting at the beginning of the line.
+For example:
+
+    /* Include the following snippet into all generated examples
+    <!--- INCLUDE .*
+    import kotlin.time.*
+    -->
+    */
+    
+Knit markup can be specified after `//` line comment, directives separated by at most one space from the beginning
+of the comment. The whitespace character after the `//` start marker is dropped when reading the directive body.
+
+    // Prefix the following example with this annotation
+    // <!--- PREFIX
+    // @file:OptIn(ExperimentalTime::class)
+    // -->
+      
+Knit markup can be specified inside `/** ... */` KDoc comments, separated by at most one from the `*` at the 
+beginning of comment line. The Knit tool does not really parse Kotlin files. It just looks at the `*` character
+at the beginning of the line. 
+
+    /**
+     * The ultimate answer to life, universe, and everything can be printed like this:
+     * ```kotlin
+     * fun main() {
+     *     println(theAnswer())
+     * }
+     * ```
+     * <!--- KNIT example-kdoc-01.kt -->
+     */
+     fun theAnswer() = 42        
+
+
 ### API references
 
 Knit tool can add links to project's API documentation, so that you can link to the public classes and
 functions similarly to how you do it from KDoc using markdown `[name]` reference syntax.
+
+> This feature is not available inside Kotlin source (`.kt`/`.kts`) files, because API documentation 
+> references inside KDoc comments are processed by the Dokka tool.
 
 #### Dokka setup
 

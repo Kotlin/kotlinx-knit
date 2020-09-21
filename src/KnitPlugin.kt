@@ -65,6 +65,7 @@ open class KnitTask : DefaultTask() {
     var files: FileCollection = ext.files ?: project.fileTree(project.rootDir) {
         it.include("**/*.md")
         it.include("**/*.kt")
+        it.include("**/*.kts")
         it.exclude("**/build/*")
         it.exclude("**/.gradle/*")
     }
