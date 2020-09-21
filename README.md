@@ -43,6 +43,7 @@ regular tools. Specific supported patterns and directives are explained in [Feat
 * [Knit properties](#knit-properties)
 * [Features](#features)
   * [Example files](#example-files)
+    * [Explicit knit directive](#explicit-knit-directive)
     * [Merging code pieces](#merging-code-pieces)
     * [Custom Knit template](#custom-knit-template)
     * [Include directive](#include-directive)
@@ -170,6 +171,21 @@ package com.example.exampleBasic01
 fun foo() {}                                    
 ```
 
+#### Explicit knit directive
+
+A `KNIT` directive can be used to trigger generation of an example file instead of providing a readable reference to a file. 
+In this case, only an example file name shall be specified (without a path).
+An example file will be written to the `knit.dir` [property](#knit-properties) directory. 
+The name of the file shall still match `knit.pattern` [property](#knit-properties) pattern and 
+it will be automatically numbered as explained in the previous section. 
+For example: 
+
+    ```kotlin
+    fun foo() {}
+    ```
+    
+    <!--- KNIT example-knit-01.kt --> 
+    
 #### Merging code pieces
 
 All tripple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when the next

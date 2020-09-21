@@ -48,17 +48,21 @@ private fun writeTest(out: PrintWriter, inPath: Path) {
     val propsPath = TEST_DATA_DIR.resolve(testPrefix + PROPERTIES_SUFFIX).takeIfExists()
     val params = mutableListOf<Any?>(testName, inPath, outPath, propsPath)
     // additional copied files
-    Files.newDirectoryStream(TEST_DATA_DIR, "$testPrefix.copy.*").use {
-        it.sorted().asSequence()
-            .mapTo(params) { path -> FileRef.Copy(path.toString()) }
+    Files.newDirectoryStream(TEST_DATA_DIR, "$testPrefix.copy.*").use { dirEntries ->
+        dirEntries.asSequence()
+            .map { path -> FileRef.Copy(path.toUnixPath()) }
+            .sortedBy { it.path }
+            .toCollection(params)
     }
     // files from the "testPrefix" directory are expected
     val extraDir = inPath.parent.resolve(testPrefix)
     if (Files.exists(extraDir)) {
-        Files.walk(extraDir).use {
-            it.asSequence()
+        Files.walk(extraDir).use { dirEntries ->
+            dirEntries.asSequence()
                 .filter { path -> Files.isRegularFile(path) }
-                .mapTo(params) { path -> FileRef.Expect(path.toString()) }
+                .map { path -> FileRef.Expect(path.toUnixPath()) }
+                .sortedBy { it.path }
+                .toCollection(params)
         }
     }
     // write test
@@ -71,11 +75,14 @@ private fun writeTest(out: PrintWriter, inPath: Path) {
     out.println("    }")
 }
 
+private fun Path.toUnixPath(): String = toString().replace('\\', '/')
+
 private fun PrintWriter.printlnParam(p: Any?, last: Boolean = false) {
     print("           ")
     when (p) {
         null -> print("null")
-        is String, is Path -> print("\"$p\"")
+        is String -> print("\"$p\"")
+        is Path -> print("\"${p.toUnixPath()}\"")
         is FileRef -> print(p)
         else -> error("Unsupported param type ${p::class}")
     }
