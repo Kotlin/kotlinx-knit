@@ -63,7 +63,7 @@ val LINK_DEF_REGEX = Regex("^\\[([A-Za-z0-9_().]+)]: .*")
 
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
-        println("Usage: Knit <markdown-files>")
+        println("Usage: Knit <input-files>")
         exitProcess(1)
     }
     val context = createDefaultContext(args.map { File(it) })
@@ -130,9 +130,9 @@ fun KnitConfig.loadMainInclude(file: File, props: KnitProps, knitName: String): 
 // Reference to knitted example's full package (pkg.name)
 class KnitRef(val props: KnitProps, val name: String)
 
-fun KnitContext.knit(markdownFile: File): Boolean {
-    log.info("*** Reading $markdownFile")
-    val props = findProps(markdownFile, rootDir)
+fun KnitContext.knit(inputFile: File): Boolean {
+    log.info("*** Reading $inputFile")
+    val props = findProps(inputFile, rootDir)
     val knit = props.knitConfig()
     val knitAutonumberIndex = HashMap<String, Int>()
     val tocLines = arrayListOf<String>()
@@ -151,14 +151,19 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     var moduleName: String by Delegates.notNull()
     var docsRoot: String by Delegates.notNull()
     var retryKnitLater = false
-    val tocRefs = ArrayList<TocRef>().also { tocRefMap[markdownFile] = it }
-    // read markdown file
-    val markdown = withMarkdownTextReader(markdownFile) {
+    val tocRefs = ArrayList<TocRef>().also { tocRefMap[inputFile] = it }
+    // read input file
+    val inputFileType = inputFile.type()
+    if (inputFileType == InputFileType.UNKNOWN) {
+        log.warn("WARNING: $inputFile: Unknown input file type. Treating it as markdown.")
+    }
+    val markdown = withInputTextReader(inputFile, inputFileType) {
         mainLoop@ while (true) {
             val inLine = readLine() ?: break
-            val directive = directive(inLine)
-            if (directive != null && markdownPart == MarkdownPart.TOC) {
-                markdownPart = MarkdownPart.POST_TOC
+            val lineStartIndex = inputFileType.lineStartIndex(inLine)
+            val directive = directive(inLine, lineStartIndex)
+            if (directive != null && inputTextPart == InputTextPart.TOC) {
+                inputTextPart = InputTextPart.POST_TOC
                 postTocText += inLine
             }
             // This function is called on a KNIT directive and on a knit in-text reference
@@ -182,7 +187,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 val fileIncludes = arrayListOf<Include>()
                 // load & process template of the main include
                 val knitName = file.name.toKnitName()
-                fileIncludes += loadMainInclude(markdownFile, props, knitName)
+                fileIncludes += loadMainInclude(inputFile, props, knitName)
                 fileIncludes += includes.filter { it.nameRegex.matches(file.name) }
                 for (include in fileIncludes) outLines += include.lines
                 if (outLines.last().isNotBlank()) outLines += ""
@@ -199,14 +204,14 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 TOC_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isEmpty()) { "$TOC_DIRECTIVE directive must not have parameters" }
-                    require(markdownPart == MarkdownPart.PRE_TOC) { "Only one TOC directive is supported" }
-                    markdownPart = MarkdownPart.TOC
+                    require(inputTextPart == InputTextPart.PRE_TOC) { "Only one TOC directive is supported" }
+                    inputTextPart = InputTextPart.TOC
                 }
                 TOC_REF_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isNotEmpty()) { "$TOC_REF_DIRECTIVE directive must include reference file path" }
                     val refPath = directive.param
-                    val refFile = File(markdownFile.parent, refPath.replace('/', File.separatorChar))
+                    val refFile = File(inputFile.parent, refPath.replace('/', File.separatorChar))
                     require(fileSet.contains(refFile)) { "Referenced file $refFile is missing from the processed file set" }
                     val toc = tocRefMap[refFile]
                     if (toc == null) {
@@ -266,7 +271,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 TEST_NAME_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isNotEmpty()) { "$TEST_NAME_DIRECTIVE directive must include name parameter" }
-                    flushTestOut(markdownFile, props, testName, testCases)
+                    flushTestOut(inputFile, props, testName, testCases)
                     testName = directive.param
                 }
                 TEST_DIRECTIVE -> {
@@ -303,22 +308,22 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     error("Unrecognized knit directive '${directive.name}' on a line starting with '$DIRECTIVE_START'")
                 }
             }
-            if (inLine.startsWith(codeStartLang)) {
+            if (inLine.startsWith(codeStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 if (codeLines.lastOrNull()?.isNotBlank() == true) codeLines += ""
-                readUntilTo(CODE_END, codeLines) { line ->
-                    !line.startsWith(SAMPLE_START) && !line.startsWith(SAMPLE_END)
+                readUntilTo(CODE_END, codeLines) { line, startIndex ->
+                    !line.startsWith(SAMPLE_START, startIndex) && !line.startsWith(SAMPLE_END, startIndex)
                 }
                 continue@mainLoop
             }
-            if (inLine.startsWith(testStartLang)) {
+            if (inLine.startsWith(testStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 readUntilTo(TEST_END, testLines)
                 continue@mainLoop
             }
-            if (inLine.startsWith(SECTION_START) && markdownPart == MarkdownPart.POST_TOC) {
-                val i = inLine.indexOf(' ')
-                require(i >= 2) { "Invalid section start" }
+            if (inLine.startsWith(SECTION_START, lineStartIndex) && inputTextPart == InputTextPart.POST_TOC) {
+                val i = inLine.indexOf(' ', lineStartIndex)
+                require(i >= lineStartIndex + 2) { "Invalid section start" }
                 val name = inLine.substring(i + 1).trim()
                 val levelPrefix = "  ".repeat(i - 2) + "*"
                 val sectionRef = makeSectionRef(name)
@@ -326,29 +331,31 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 tocRefs += TocRef(levelPrefix, name, sectionRef)
                 continue@mainLoop
             }
-            val linkDefMatch = LINK_DEF_REGEX.matchEntire(inLine)
-            if (linkDefMatch != null) {
-                val name = linkDefMatch.groups[1]!!.value
-                remainingApiRefNames -= name
-            } else {
-                for (match in API_REF_REGEX.findAll(inLine)) {
-                    val apiRef = ApiRef(lineNumber, match.groups[2]!!.value)
-                    allApiRefs += apiRef
-                    remainingApiRefNames += apiRef.name
+            if (!inputFileType.ignoreTextRefs) {
+                val linkDefMatch = LINK_DEF_REGEX.matchEntire(inLine)
+                if (linkDefMatch != null) {
+                    val name = linkDefMatch.groups[1]!!.value
+                    remainingApiRefNames -= name
+                } else {
+                    for (match in API_REF_REGEX.findAll(inLine)) {
+                        val apiRef = ApiRef(lineNumber, match.groups[2]!!.value)
+                        allApiRefs += apiRef
+                        remainingApiRefNames += apiRef.name
+                    }
                 }
-            }
-            knit?.referenceRegex?.find(inLine)?.let {
-                knit.doKnit(
-                    file = File(markdownFile.parentFile, it.groups[1]!!.value),
-                    fileMatch = it.groups[2]!!,
-                    numberMatch = it.groups[3]!!
-                )
+                knit?.referenceRegex?.find(inLine)?.let {
+                    knit.doKnit(
+                        file = File(inputFile.parentFile, it.groups[1]!!.value),
+                        fileMatch = it.groups[2]!!,
+                        numberMatch = it.groups[3]!!
+                    )
+                }
             }
         }
     } ?: return false // false when failed
     // bailout if retry was requested
     if (retryKnitLater) {
-        fileQueue.add(markdownFile)
+        fileQueue.add(inputFile)
         return true
     }
     // update markdown file with toc
@@ -361,15 +368,15 @@ fun KnitContext.knit(markdownFile: File): Boolean {
         }
         addAll(markdown.postTocText)
     }
-    if (newLines != markdown.inText) writeLines(markdownFile, newLines)
+    if (newLines != markdown.inText) writeLines(inputFile, newLines)
     // check apiRefs
     for (apiRef in allApiRefs) {
         if (apiRef.name in remainingApiRefNames) {
-            log.warn("WARNING: $markdownFile: ${apiRef.line}: Broken reference to [${apiRef.name}]")
+            log.warn("WARNING: $inputFile: ${apiRef.line}: Broken reference to [${apiRef.name}]")
         }
     }
     // write test output
-    flushTestOut(markdownFile, props, testName, testCases)
+    flushTestOut(inputFile, props, testName, testCases)
     return true
 }
 
@@ -423,14 +430,15 @@ private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: Str
     testCases.clear()
 }
 
-private fun MarkdownTextReader.readUntil(marker: String): List<String> =
+private fun InputTextReader.readUntil(marker: String): List<String> =
     arrayListOf<String>().also { readUntilTo(marker, it) }
 
-private fun MarkdownTextReader.readUntilTo(marker: String, list: MutableList<String>, linePredicate: (String) -> Boolean = { true }) {
+private fun InputTextReader.readUntilTo(marker: String, list: MutableList<String>, linePredicate: (String, Int) -> Boolean = { _, _ -> true }) {
     while (true) {
         val line = readLine() ?: break
-        if (line.startsWith(marker)) break
-        if (linePredicate(line)) list += line
+        val startIndex = inputFileType.lineStartIndex(line)
+        if (line.startsWith(marker, startIndex)) break
+        if (linePredicate(line, startIndex)) list += line.substring(startIndex)
     }
 }
 
@@ -460,9 +468,37 @@ class Directive(
     val singleLine: Boolean
 )
 
-fun directive(line: String): Directive? {
-    if (!line.startsWith(DIRECTIVE_START)) return null // fast check
-    val match = DIRECTIVE_REGEX.matchEntire(line) ?: return null
+enum class InputFileType(
+    val extension: String,
+    val skipLeadingChars: (Char) -> Boolean = { false },
+    val directivePrefix: List<String> = emptyList(),
+    val ignoreTextRefs: Boolean = false
+) {
+    MARKDOWN(".md"),
+    KOTLIN(".kt",
+        skipLeadingChars = { it.isWhitespace() },
+        directivePrefix = listOf("// ", "* ", "//", "*"),
+        ignoreTextRefs = true
+    ),
+    UNKNOWN("") // works just like MARKDOWN
+}
+
+fun File.type(): InputFileType = InputFileType.values().first { name.endsWith(it.extension) }
+
+fun InputFileType.lineStartIndex(line: String): Int {
+    var startIndex = 0
+    while (startIndex < line.length && this.skipLeadingChars(line[startIndex])) startIndex++
+    for (prefix in directivePrefix) {
+        if (line.startsWith(prefix, startIndex)) {
+            return startIndex + prefix.length
+        }
+    }
+    return 0
+}
+
+fun directive(line: String, startIndex: Int): Directive? {
+    if (!line.startsWith(DIRECTIVE_START, startIndex)) return null // fast check
+    val match = DIRECTIVE_REGEX.matchEntire(line.substring(startIndex)) ?: return null
     val groups = match.groups.filterNotNull().toMutableList()
     val singleLine = groups.last().value == DIRECTIVE_END
     if (singleLine) groups.removeAt(groups.lastIndex)
@@ -470,25 +506,25 @@ fun directive(line: String): Directive? {
     val paramGroup = groups.getOrNull(2)
     val param = paramGroup?.value?.trimEnd() ?: ""
     val paramOffset = paramGroup?.range?.first ?: 0
-    return Directive(name, param, paramOffset, singleLine)
+    return Directive(name, param, startIndex + paramOffset, singleLine)
 }
 
 class ApiRef(val line: Int, val name: String)
 
-enum class MarkdownPart { PRE_TOC, TOC, POST_TOC }
+enum class InputTextPart { PRE_TOC, TOC, POST_TOC }
 
-class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
+class InputTextReader(val inputFileType: InputFileType, r: Reader) : LineNumberReader(r) {
     val inText = arrayListOf<String>()
     val preTocText = arrayListOf<String>()
     val postTocText = arrayListOf<String>()
-    var markdownPart: MarkdownPart = MarkdownPart.PRE_TOC
+    var inputTextPart: InputTextPart = InputTextPart.PRE_TOC
     var skip = false
     var putBackLine: String? = null
 
-    val outText: MutableList<String> get() = when (markdownPart) {
-        MarkdownPart.PRE_TOC -> preTocText
-        MarkdownPart.POST_TOC -> postTocText
-        else -> throw IllegalStateException("Wrong state: $markdownPart")
+    val outText: MutableList<String> get() = when (inputTextPart) {
+        InputTextPart.PRE_TOC -> preTocText
+        InputTextPart.POST_TOC -> postTocText
+        else -> throw IllegalStateException("Wrong state: $inputTextPart")
     }
 
     override fun readLine(): String? {
@@ -498,7 +534,7 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
         }
         val line = super.readLine() ?: return null
         inText += line
-        if (!skip && markdownPart != MarkdownPart.TOC)
+        if (!skip && inputTextPart != InputTextPart.TOC)
             outText += line
         return line
     }
@@ -513,7 +549,7 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
         skip = true
         while (true) {
             val skipLine = readLine() ?: return false
-            if (directive(skipLine) != null) {
+            if (directive(skipLine, inputFileType.lineStartIndex(skipLine)) != null) {
                 putBackLine = skipLine
                 break
             }
@@ -525,8 +561,8 @@ class MarkdownTextReader(r: Reader) : LineNumberReader(r) {
     }
 }
 
-fun KnitContext.withMarkdownTextReader(file: File, block: MarkdownTextReader.() -> Unit): MarkdownTextReader? =
-    withLineNumberReader(file, ::MarkdownTextReader, block)
+fun KnitContext.withInputTextReader(file: File, type: InputFileType, block: InputTextReader.() -> Unit): InputTextReader? =
+    withLineNumberReader(file, { r -> InputTextReader(type, r) }, block)
 
 fun KnitContext.writeLinesIfNeeded(file: File, outLines: List<String>) {
     val oldLines = try {
