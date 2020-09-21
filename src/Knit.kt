@@ -26,6 +26,7 @@ const val KNIT_LANGUAGE_PROP = "knit.language"
 
 const val DIRECTIVE_START = "<!--- "
 const val DIRECTIVE_END = "-->"
+val DIRECTIVE_REGEX = Regex("$DIRECTIVE_START\\s*([_A-Z]+)(?:\\s+(.+?(?=$DIRECTIVE_END|)))?(?:\\s*($DIRECTIVE_END))?\\s*")
 
 const val TOC_DIRECTIVE = "TOC"
 const val END_DIRECTIVE = "END"
@@ -33,6 +34,7 @@ const val TOC_REF_DIRECTIVE = "TOC_REF"
 const val INCLUDE_DIRECTIVE = "INCLUDE"
 const val PREFIX_DIRECTIVE = "PREFIX"
 const val CLEAR_DIRECTIVE = "CLEAR"
+const val KNIT_DIRECTIVE = "KNIT"
 const val TEST_DIRECTIVE = "TEST"
 
 const val KNIT_AUTONUMBER_PLACEHOLDER = '#'
@@ -76,8 +78,9 @@ fun KnitContext.process(): Boolean {
 }
 
 class KnitConfig(
-    val path: String,
-    val regex: Regex,
+    val knitDir: File, // Resolved path to the knit.dir, e.g. "src/path/"
+    val referenceRegex: Regex, // Regex for in-text references to knitted file, e.g "(../src/path/example-foo-01.kt)"
+    val nameRegex: Regex, // Regex for KNIT command references, without a path, e.g. "example-foo-01.kt"
     val autonumberDigits: Int
 )
 
@@ -97,9 +100,16 @@ fun KnitProps.knitConfig(): KnitConfig? {
         }
         pattern = pattern.substring(0, i) + KNIT_AUTONUMBER_REGEX + pattern.substring(j + 1)
     }
-    val path = "$dir($pattern)"
-    return KnitConfig(path, Regex("\\(($path)\\)"), autonumberDigits)
+    return KnitConfig(
+        knitDir = getFile(KNIT_DIR_PROP),
+        referenceRegex = Regex("\\(($dir($pattern))\\)"),
+        nameRegex = Regex(pattern),
+        autonumberDigits = autonumberDigits
+    )
 }
+
+private operator fun MatchGroup.plus(offset: Int) =
+    MatchGroup(value, IntRange(range.first + offset, range.last + offset))
 
 @Suppress("unused") // This class is passed to freemarker template
 class KnitIncludeEnv(
@@ -111,7 +121,7 @@ class KnitIncludeEnv(
 }
 
 fun KnitConfig.loadMainInclude(file: File, props: KnitProps, knitName: String): Include {
-    val include = Include(Regex(path))
+    val include = Include(nameRegex)
     include.lines += props.loadTemplateLines(KNIT_INCLUDE_PROP, KnitIncludeEnv(file, props, knitName))
     include.lines += ""
     return include
@@ -151,6 +161,39 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 markdownPart = MarkdownPart.POST_TOC
                 postTocText += inLine
             }
+            // This function is called on a KNIT directive and on a knit in-text reference
+            fun KnitConfig.doKnit(file: File, fileMatch: MatchGroup, numberMatch: MatchGroup) {
+                if (autonumberDigits != 0) {
+                    val key = inLine.substring(fileMatch.range.first, numberMatch.range.first) +
+                            inLine.substring(numberMatch.range.last + 1, fileMatch.range.last + 1)
+                    val index = knitAutonumberIndex.getOrElse(key) { 1 }
+                    val num = index.toString().padStart(autonumberDigits, '0')
+                    if (numberMatch.value != num) { // update and retry with this line if a different number
+                        val r = numberMatch.range
+                        val newLine = inLine.substring(0, r.first) + num + inLine.substring(r.last + 1)
+                        updateLineAndRetry(newLine)
+                        return
+                    }
+                    knitAutonumberIndex[key] = index + 1
+                }
+                require(files.add(file)) { "Duplicate file: $file"}
+                log.info("Knitting $file ...")
+                val outLines = prefixLines.toMutableList()
+                val fileIncludes = arrayListOf<Include>()
+                // load & process template of the main include
+                val knitName = file.name.toKnitName()
+                fileIncludes += loadMainInclude(markdownFile, props, knitName)
+                fileIncludes += includes.filter { it.nameRegex.matches(file.name) }
+                for (include in fileIncludes) outLines += include.lines
+                if (outLines.last().isNotBlank()) outLines += ""
+                for (code in codeLines) {
+                    outLines += code.replace("System.currentTimeMillis()", "currentTimeMillis()")
+                }
+                prefixLines.clear()
+                codeLines.clear()
+                writeLinesIfNeeded(file, outLines)
+                lastKnit = KnitRef(props, knitName)
+            }
             when (directive?.name) {
                 null, END_DIRECTIVE -> { /* do nothing, END works like NOP, too */ }
                 TOC_DIRECTIVE -> {
@@ -161,7 +204,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 TOC_REF_DIRECTIVE -> {
                     requireSingleLine(directive)
-                    require(!directive.param.isEmpty()) { "$TOC_REF_DIRECTIVE directive must include reference file path" }
+                    require(directive.param.isNotEmpty()) { "$TOC_REF_DIRECTIVE directive must include reference file path" }
                     val refPath = directive.param
                     val refFile = File(markdownFile.parent, refPath.replace('/', File.separatorChar))
                     require(fileSet.contains(refFile)) { "Referenced file $refFile is missing from the processed file set" }
@@ -180,7 +223,9 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                         require(!directive.singleLine) { "$INCLUDE_DIRECTIVE directive without parameters must not be single line" }
                         readUntilTo(DIRECTIVE_END, codeLines)
                     } else {
-                        val include = Include(Regex(directive.param))
+                        // Note: Trim legacy .*/ prefix that is not needed in INCLUDE patterns anymore, only name matches
+                        val namePattern = directive.param.removePrefix(".*/")
+                        val include = Include(Regex(namePattern))
                         if (directive.singleLine) {
                             include.lines += codeLines
                             codeLines.clear()
@@ -207,6 +252,17 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     codeLines.clear()
                     continue@mainLoop
                 }
+                KNIT_DIRECTIVE -> {
+                    requireSingleLine(directive)
+                    require(knit != null) { "'$KNIT_DIR_PROP' property must be configured to use $KNIT_DIRECTIVE directive" }
+                    val match = knit.nameRegex.matchEntire(directive.param)
+                    require(match != null) { "$KNIT_DIRECTIVE directive parameter must match '$KNIT_PATTERN_PROP' property pattern" }
+                    knit.doKnit(
+                        file = File(knit.knitDir, directive.param),
+                        fileMatch = match.groups[0]!! + directive.paramOffset,
+                        numberMatch = match.groups[1]!! + directive.paramOffset
+                    )
+                }
                 TEST_NAME_DIRECTIVE -> {
                     requireSingleLine(directive)
                     require(directive.param.isNotEmpty()) { "$TEST_NAME_DIRECTIVE directive must include name parameter" }
@@ -215,7 +271,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                 }
                 TEST_DIRECTIVE -> {
                     require(lastKnit != null) { "$TEST_DIRECTIVE must be preceded by knitted file" }
-                    require(testName != null) { "Neither $TEST_NAME_DIRECTIVE directive nor '$TEST_NAME_PROP'property was specified" }
+                    require(testName != null) { "Neither $TEST_NAME_DIRECTIVE directive nor '$TEST_NAME_PROP' property was specified" }
                     val param = directive.param
                     if (testLines.isEmpty()) {
                         if (directive.singleLine) {
@@ -281,42 +337,12 @@ fun KnitContext.knit(markdownFile: File): Boolean {
                     remainingApiRefNames += apiRef.name
                 }
             }
-            knit?.regex?.find(inLine)?.let knitRegexMatch@{ knitMatch ->
-                val path = knitMatch.groups[1]!!.value // full matched knit path dir dir & file name
-                val fileGroup = knitMatch.groups[2]!!
-                val fileName = fileGroup.value // knitted file name like "example-basic-01.kt"
-                if (knit.autonumberDigits != 0) {
-                    val numGroup = knitMatch.groups[3]!! // file number part like "01"
-                    val key = inLine.substring(fileGroup.range.first, numGroup.range.first) +
-                            inLine.substring(numGroup.range.last + 1, fileGroup.range.last + 1)
-                    val index = knitAutonumberIndex.getOrElse(key) { 1 }
-                    val num = index.toString().padStart(knit.autonumberDigits, '0')
-                    if (numGroup.value != num) { // update and retry with this line if a different number
-                        val r = numGroup.range
-                        val newLine = inLine.substring(0, r.first) + num + inLine.substring(r.last + 1)
-                        updateLineAndRetry(newLine)
-                        return@knitRegexMatch
-                    }
-                    knitAutonumberIndex[key] = index + 1
-                }
-                val file = File(markdownFile.parentFile, path)
-                require(files.add(file)) { "Duplicate file: $file"}
-                log.info("Knitting $file ...")
-                val outLines = prefixLines.toMutableList()
-                val fileIncludes = arrayListOf<Include>()
-                // load & process template of the main include
-                val knitName = fileName.toKnitName()
-                fileIncludes += knit.loadMainInclude(markdownFile, props, knitName)
-                fileIncludes += includes.filter { it.regex.matches(path) }
-                for (include in fileIncludes) outLines += include.lines
-                if (outLines.last().isNotBlank()) outLines += ""
-                for (code in codeLines) {
-                    outLines += code.replace("System.currentTimeMillis()", "currentTimeMillis()")
-                }
-                prefixLines.clear()
-                codeLines.clear()
-                writeLinesIfNeeded(file, outLines)
-                lastKnit = KnitRef(props, knitName)
+            knit?.referenceRegex?.find(inLine)?.let {
+                knit.doKnit(
+                    file = File(markdownFile.parentFile, it.groups[1]!!.value),
+                    fileMatch = it.groups[2]!!,
+                    numberMatch = it.groups[3]!!
+                )
             }
         }
     } ?: return false // false when failed
@@ -328,7 +354,7 @@ fun KnitContext.knit(markdownFile: File): Boolean {
     // update markdown file with toc
     val newLines = buildList<String> {
         addAll(markdown.preTocText)
-        if (!tocLines.isEmpty()) {
+        if (tocLines.isNotEmpty()) {
             add("")
             addAll(tocLines)
             add("")
@@ -425,23 +451,26 @@ fun makeSectionRef(name: String): String = name
     .replace(("[" + Regex.escape(skippedTocSymbols) + "]").toRegex(), "")
     .toLowerCase()
 
-class Include(val regex: Regex, val lines: MutableList<String> = arrayListOf())
+class Include(val nameRegex: Regex, val lines: MutableList<String> = arrayListOf())
 
 class Directive(
     val name: String,
     val param: String,
+    val paramOffset: Int,
     val singleLine: Boolean
 )
 
 fun directive(line: String): Directive? {
-    if (!line.startsWith(DIRECTIVE_START)) return null
-    var s = line.substring(DIRECTIVE_START.length).trim()
-    val singleLine = s.endsWith(DIRECTIVE_END)
-    if (singleLine) s = s.substring(0, s.length - DIRECTIVE_END.length)
-    val i = s.indexOf(' ')
-    val name = if (i < 0) s else s.substring(0, i)
-    val param = if (i < 0) "" else s.substring(i).trim()
-    return Directive(name, param, singleLine)
+    if (!line.startsWith(DIRECTIVE_START)) return null // fast check
+    val match = DIRECTIVE_REGEX.matchEntire(line) ?: return null
+    val groups = match.groups.filterNotNull().toMutableList()
+    val singleLine = groups.last().value == DIRECTIVE_END
+    if (singleLine) groups.removeAt(groups.lastIndex)
+    val name = groups[1].value
+    val paramGroup = groups.getOrNull(2)
+    val param = paramGroup?.value?.trimEnd() ?: ""
+    val paramOffset = paramGroup?.range?.first ?: 0
+    return Directive(name, param, paramOffset, singleLine)
 }
 
 class ApiRef(val line: Int, val name: String)
