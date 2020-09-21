@@ -6,3 +6,4 @@ package com.example.examplePatternmatch01
 // include into the first example
 
 fun theFirstExample() {}
+// suffix the first example

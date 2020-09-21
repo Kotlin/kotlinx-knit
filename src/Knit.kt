@@ -33,6 +33,7 @@ const val END_DIRECTIVE = "END"
 const val TOC_REF_DIRECTIVE = "TOC_REF"
 const val INCLUDE_DIRECTIVE = "INCLUDE"
 const val PREFIX_DIRECTIVE = "PREFIX"
+const val SUFFIX_DIRECTIVE = "SUFFIX"
 const val CLEAR_DIRECTIVE = "CLEAR"
 const val KNIT_DIRECTIVE = "KNIT"
 const val TEST_DIRECTIVE = "TEST"
@@ -136,6 +137,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
     val includes = arrayListOf<Include>()
     val codeStartLang = CODE_START + props.getValue(KNIT_LANGUAGE_PROP)
     val prefixLines = arrayListOf<String>()
+    val suffixLines = arrayListOf<String>()
     val codeLines = arrayListOf<String>()
     val testStartLang = TEST_START + props.getValue(TEST_LANGUAGE_PROP)
     val testLines = arrayListOf<String>()
@@ -197,8 +199,14 @@ fun KnitContext.knit(inputFile: File): Boolean {
                 for (code in codeLines) {
                     outLines += code.replace("System.currentTimeMillis()", "currentTimeMillis()")
                 }
+                // -- SUFFIX --
+                includes
+                    .filter { it.type == IncludeType.SUFFIX && it.nameRegex.matches(file.name) }
+                    .forEach { outLines += it.lines }
+                outLines += suffixLines
                 // -- Finalize and write --
                 prefixLines.clear()
+                suffixLines.clear()
                 codeLines.clear()
                 writeLinesIfNeeded(file, outLines)
                 lastKnit = KnitRef(props, knitName)
@@ -261,6 +269,19 @@ fun KnitContext.knit(inputFile: File): Boolean {
                         }
                     } else {
                         saveInclude(directive, IncludeType.PREFIX)
+                    }
+                    continue@mainLoop
+                }
+                SUFFIX_DIRECTIVE -> {
+                    if (directive.param.isEmpty()) {
+                        if (directive.singleLine) {
+                            suffixLines += codeLines
+                            codeLines.clear()
+                        } else {
+                            readUntilTo(DIRECTIVE_END, suffixLines)
+                        }
+                    } else {
+                        saveInclude(directive, IncludeType.SUFFIX)
                     }
                     continue@mainLoop
                 }
@@ -472,7 +493,7 @@ fun makeSectionRef(name: String): String = name
     .replace(("[" + Regex.escape(skippedTocSymbols) + "]").toRegex(), "")
     .toLowerCase()
 
-enum class IncludeType { INCLUDE, PREFIX }
+enum class IncludeType { INCLUDE, PREFIX, SUFFIX }
 
 class Include(
     val type: IncludeType,

@@ -5,3 +5,4 @@ package com.example.examplePatternmatch02
 // include into the second example
 
 fun theSecondExample() {}
+// suffix the second example
