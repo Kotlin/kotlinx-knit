@@ -465,7 +465,7 @@ For example:
     -->
     */
     
-Knit markup can be specified after `//` line comment, directives separated by at most one space from the beginning
+Knit markup can be specified after `//` line comment, directives separated by one space from the beginning
 of the comment. The whitespace character after the `//` start marker is dropped when reading the directive body.
 
     // Prefix the following example with this annotation
@@ -473,8 +473,8 @@ of the comment. The whitespace character after the `//` start marker is dropped 
     // @file:OptIn(ExperimentalTime::class)
     // -->
       
-Knit markup can be specified inside `/** ... */` KDoc comments, separated by at most one from the `*` at the 
-beginning of comment line. The Knit tool does not really parse Kotlin files. It just looks at the `*` character
+Knit markup can be specified inside `/** ... */` KDoc comments, separated by one space from the `*` at the 
+beginning of comment lines. The Knit tool does not really parse Kotlin files. It just looks at the `*` character
 at the beginning of the line. 
 
     /**

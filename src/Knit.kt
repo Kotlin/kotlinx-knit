@@ -160,6 +160,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
         mainLoop@ while (true) {
             val inLine = readLine() ?: break
             val lineStartIndex = inputFileType.lineStartIndex(inLine)
+            val linePrefix = inLine.substring(0, lineStartIndex)
             val directive = directive(inLine, lineStartIndex)
             if (directive != null && inputTextPart == InputTextPart.TOC) {
                 inputTextPart = InputTextPart.POST_TOC
@@ -221,7 +222,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     include.lines += codeLines
                     codeLines.clear()
                 } else {
-                    readUntilTo(DIRECTIVE_END, include.lines)
+                    readUntilTo(DIRECTIVE_END, linePrefix, include.lines)
                 }
                 includes += include
             }
@@ -253,7 +254,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                 INCLUDE_DIRECTIVE -> {
                     if (directive.param.isEmpty()) {
                         require(!directive.singleLine) { "$INCLUDE_DIRECTIVE directive without parameters must not be single line" }
-                        readUntilTo(DIRECTIVE_END, codeLines)
+                        readUntilTo(DIRECTIVE_END, linePrefix, codeLines)
                     } else {
                         saveInclude(directive, IncludeType.INCLUDE)
                     }
@@ -265,7 +266,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                             prefixLines += codeLines
                             codeLines.clear()
                         } else {
-                            readUntilTo(DIRECTIVE_END, prefixLines)
+                            readUntilTo(DIRECTIVE_END, linePrefix, prefixLines)
                         }
                     } else {
                         saveInclude(directive, IncludeType.PREFIX)
@@ -278,7 +279,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                             suffixLines += codeLines
                             codeLines.clear()
                         } else {
-                            readUntilTo(DIRECTIVE_END, suffixLines)
+                            readUntilTo(DIRECTIVE_END, linePrefix, suffixLines)
                         }
                     } else {
                         saveInclude(directive, IncludeType.SUFFIX)
@@ -316,7 +317,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                         if (directive.singleLine) {
                             require(param.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $testStartLang block or contain test parameter"}
                         } else
-                            testLines += readUntil(DIRECTIVE_END)
+                            testLines += readUntil(DIRECTIVE_END, linePrefix)
                     } else {
                         requireSingleLine(directive)
                     }
@@ -345,14 +346,15 @@ fun KnitContext.knit(inputFile: File): Boolean {
             if (inLine.startsWith(codeStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 if (codeLines.lastOrNull()?.isNotBlank() == true) codeLines += ""
-                readUntilTo(CODE_END, codeLines) { line, startIndex ->
-                    !line.startsWith(SAMPLE_START, startIndex) && !line.startsWith(SAMPLE_END, startIndex)
+                readUntilTo(CODE_END, linePrefix, codeLines) { line ->
+                    val offset = minOf(lineStartIndex, line.length)
+                    !line.startsWith(SAMPLE_START, offset) && !line.startsWith(SAMPLE_END, offset)
                 }
                 continue@mainLoop
             }
             if (inLine.startsWith(testStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
-                readUntilTo(TEST_END, testLines)
+                readUntilTo(TEST_END, linePrefix, testLines)
                 continue@mainLoop
             }
             if (inLine.startsWith(SECTION_START, lineStartIndex) && inputTextPart == InputTextPart.POST_TOC) {
@@ -464,15 +466,17 @@ private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: Str
     testCases.clear()
 }
 
-private fun InputTextReader.readUntil(marker: String): List<String> =
-    arrayListOf<String>().also { readUntilTo(marker, it) }
+private fun InputTextReader.readUntil(marker: String, linePrefix: String): List<String> =
+    arrayListOf<String>().also { readUntilTo(marker, linePrefix, it) }
 
-private fun InputTextReader.readUntilTo(marker: String, list: MutableList<String>, linePredicate: (String, Int) -> Boolean = { _, _ -> true }) {
+private fun InputTextReader.readUntilTo(marker: String, linePrefix: String, list: MutableList<String>, linePredicate: (String) -> Boolean = { true }) {
     while (true) {
         val line = readLine() ?: break
-        val startIndex = inputFileType.lineStartIndex(line)
-        if (line.startsWith(marker, startIndex)) break
-        if (linePredicate(line, startIndex)) list += line.substring(startIndex)
+        require(line.startsWith(linePrefix) || line == linePrefix.trimEnd()) {
+            "Line must start with the same prefix '$linePrefix' as the first line"
+        }
+        if (line.startsWith(marker, linePrefix.length)) break
+        if (linePredicate(line)) list += line.substring(minOf(linePrefix.length, line.length))
     }
 }
 
@@ -509,7 +513,7 @@ class Directive(
 )
 
 private val skipWhitespace: (Char) -> Boolean = { it.isWhitespace() }
-private val kotlinCommentPrefixes = listOf("// ", "* ", "//", "*")
+private val kotlinCommentPrefixes = listOf("// ", "* ")
 
 enum class InputFileType(
     val extension: String,

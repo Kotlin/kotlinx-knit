@@ -1,5 +1,6 @@
 /* Include the following snippet into all generated examples
 <!--- INCLUDE .*
+// import time
 import kotlin.time.*
 -->
 */
@@ -8,6 +9,13 @@ import kotlin.time.*
 // <!--- PREFIX
 // @file:OptIn(ExperimentalTime::class)
 // -->
+
+/*
+ * <!--- SUFFIX
+ *
+ * // The example ends, mind the single empty line above
+ * -->
+ */
 
 /**
  * The ultimate answer to life, universe, and everything can be printed like this:
