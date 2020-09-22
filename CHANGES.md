@@ -1,5 +1,15 @@
 # Change log for kotlinx-knit
 
+## Version 0.2.0
+
+* **Knit Kotlin source (`.kt`/`.kts`) files**.
+  * Directives can used after `//` comments or after `*` in KDocs.
+* Explicit `KNIT` directive as an alternative to `(example-xxx.kt)` link to trigger example generation.
+* Name pattern supported in the `PREFIX` directive. 
+* The `SUFFIX` directive introduced.
+* Back-to-back directives in a single comment block with `---- <directive>` to continue with the next one.
+* Fixed: consistently skip unsupported symbols in TOC links (see #14).
+
 ## Version 0.1.6
 
 * Support 'PREFIX' directive to append code to the beginning of the example file.
