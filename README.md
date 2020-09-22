@@ -32,7 +32,7 @@ or the following format for multi-line directives:
     -->
 
 Directives look like HTML comments, so their contents are not visible when the markdown is rendered by
-regular tools. Specific makrdown pattern and directives supported by Knit are explained in the [Features](#features) section.
+regular tools. Specific markup patterns and directives supported by Knit are explained in the [Features](#features) section.
 For inclusion of directives into Kotlin source (`.kt`/`.kts`) files see 
 the [Kotlin Source Comments](#kotlin-source-comments) section.  
 
@@ -52,6 +52,7 @@ the [Kotlin Source Comments](#kotlin-source-comments) section.
     * [Include directive](#include-directive)
     * [Advanced include](#advanced-include)
     * [Prefix directive](#prefix-directive)
+    * [Suffix and back-to-back directives](#suffix-and-back-to-back-directives)
   * [Tests](#tests)
     * [Hidden test](#hidden-test)
     * [Custom test predicate](#custom-test-predicate)
@@ -182,7 +183,7 @@ fun foo() {}
 A `KNIT` directive can be used to trigger generation of an example file instead of providing a readable reference to a file. 
 In this case, only an example file name shall be specified (without a path).
 An example file will be written to the `knit.dir` [property](#knit-properties) directory. 
-The name of the file shall still match `knit.pattern` [property](#knit-properties) pattern and 
+The name of the file shall still match the `knit.pattern` [property](#knit-properties) pattern and 
 it will be automatically numbered as explained in the previous section. 
 For example: 
 
@@ -285,7 +286,7 @@ fun exit(): Nothing = exitProcess(0)
 #### Advanced include
 
 A single piece of code can be included into multiple examples (as opposed to the next example only)
-by specifying regex patten of the example name right after the `INCLUDE` directive as its parameter. 
+by specifying regex pattern of the example file name right after the `INCLUDE` directive as its parameter. 
 
 With the pattern the `INCLUDE` directive can also be specified on a single line, without the
 code inside of it. In this case, the code to be included is taken from the previously tripple-backquoted
@@ -320,20 +321,21 @@ package com.example.examplePrefix01
 fun example() {}
 ```          
 
-Similarly to the `INCLUDE` directive you can put the code inside the `PREFIX` directive, so that the reader
+Just like the `INCLUDE` directive you can put the code inside the `PREFIX` directive, so that the reader
 does not see it (because it is a comment), but it affects the resulting example file. A parameter with the file
 name pattern can be also added to the `PREFIX` directive to affect multiple examples. 
 
-### Suffix directive
+#### Suffix and back-to-back directives
 
-The `SUFFIX` queues a piece of code to be added to the end of the example file and supports all the same features
-as `INCLUDE` and `PREFIX`, including patterns. This way, for example, using a combination of `INCLUDE` and `SUFFIX`, 
-a specific common scaffolding can be defined around several code examples mathcing a specific name pattern.
+The `SUFFIX` directive queues a piece of code to be added to the end of the example file and supports all the same features
+as `INCLUDE` and `PREFIX`, including patterns. This way, using a combination of `INCLUDE` and `SUFFIX`, 
+a specific common scaffolding can be defined around several code examples matching a specific name pattern.
+When multiple directives are written back-to-back they can be laid out as a single HTML comment, using `----- `
+to end one directive and begin the next one. 
 
     <!--- INCLUDE .*print.*
     fun main() { 
-    -->
-    <!--- SUFFIX .*print.*
+    ----- SUFFIX .*print.*
         .let { println(it) }
     }    
     -->

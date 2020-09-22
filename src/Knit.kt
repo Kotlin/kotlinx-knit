@@ -25,6 +25,7 @@ const val KNIT_LANGUAGE_PROP = "knit.language"
 // --- markdown syntax
 
 const val DIRECTIVE_START = "<!--- "
+const val DIRECTIVE_NEXT = "----- "
 const val DIRECTIVE_END = "-->"
 val DIRECTIVE_REGEX = Regex("$DIRECTIVE_START\\s*([_A-Z]+)(?:\\s+(.+?(?=$DIRECTIVE_END|)))?(?:\\s*($DIRECTIVE_END))?\\s*")
 
@@ -222,7 +223,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     include.lines += codeLines
                     codeLines.clear()
                 } else {
-                    readUntilTo(DIRECTIVE_END, linePrefix, include.lines)
+                    readUntilToDirectiveEnd(linePrefix, include.lines)
                 }
                 includes += include
             }
@@ -254,7 +255,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                 INCLUDE_DIRECTIVE -> {
                     if (directive.param.isEmpty()) {
                         require(!directive.singleLine) { "$INCLUDE_DIRECTIVE directive without parameters must not be single line" }
-                        readUntilTo(DIRECTIVE_END, linePrefix, codeLines)
+                        readUntilToDirectiveEnd(linePrefix, codeLines)
                     } else {
                         saveInclude(directive, IncludeType.INCLUDE)
                     }
@@ -266,7 +267,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                             prefixLines += codeLines
                             codeLines.clear()
                         } else {
-                            readUntilTo(DIRECTIVE_END, linePrefix, prefixLines)
+                            readUntilToDirectiveEnd(linePrefix, prefixLines)
                         }
                     } else {
                         saveInclude(directive, IncludeType.PREFIX)
@@ -279,7 +280,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                             suffixLines += codeLines
                             codeLines.clear()
                         } else {
-                            readUntilTo(DIRECTIVE_END, linePrefix, suffixLines)
+                            readUntilToDirectiveEnd(linePrefix, suffixLines)
                         }
                     } else {
                         saveInclude(directive, IncludeType.SUFFIX)
@@ -317,7 +318,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                         if (directive.singleLine) {
                             require(param.isNotEmpty()) { "$TEST_DIRECTIVE must be preceded by $testStartLang block or contain test parameter"}
                         } else
-                            testLines += readUntil(DIRECTIVE_END, linePrefix)
+                            readUntilToDirectiveEnd(linePrefix, testLines)
                     } else {
                         requireSingleLine(directive)
                     }
@@ -346,15 +347,21 @@ fun KnitContext.knit(inputFile: File): Boolean {
             if (inLine.startsWith(codeStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
                 if (codeLines.lastOrNull()?.isNotBlank() == true) codeLines += ""
-                readUntilTo(CODE_END, linePrefix, codeLines) { line ->
-                    val offset = minOf(lineStartIndex, line.length)
-                    !line.startsWith(SAMPLE_START, offset) && !line.startsWith(SAMPLE_END, offset)
-                }
+                readUntilTo(
+                    linePrefix, codeLines,
+                    endLine = { line -> line.startsWith(CODE_END, lineStartIndex) },
+                    acceptLine = { line ->
+                        !line.startsWith(SAMPLE_START, lineStartIndex) && !line.startsWith(SAMPLE_END, lineStartIndex)
+                    }
+                )
                 continue@mainLoop
             }
             if (inLine.startsWith(testStartLang, lineStartIndex)) {
                 require(testName == null || testLines.isEmpty()) { "Previous test was not emitted with $TEST_DIRECTIVE" }
-                readUntilTo(TEST_END, linePrefix, testLines)
+                readUntilTo(
+                    linePrefix, testLines,
+                    endLine = { line -> line.startsWith(TEST_END, lineStartIndex) }
+                )
                 continue@mainLoop
             }
             if (inLine.startsWith(SECTION_START, lineStartIndex) && inputTextPart == InputTextPart.POST_TOC) {
@@ -466,19 +473,36 @@ private fun KnitContext.flushTestOut(file: File, props: KnitProps, testName: Str
     testCases.clear()
 }
 
-private fun InputTextReader.readUntil(marker: String, linePrefix: String): List<String> =
-    arrayListOf<String>().also { readUntilTo(marker, linePrefix, it) }
-
-private fun InputTextReader.readUntilTo(marker: String, linePrefix: String, list: MutableList<String>, linePredicate: (String) -> Boolean = { true }) {
+private fun InputTextReader.readUntilTo(
+    linePrefix: String,
+    list: MutableList<String>,
+    endLine: (String) -> Boolean,
+    acceptLine: (String) -> Boolean = { true }
+) {
     while (true) {
         val line = readLine() ?: break
         require(line.startsWith(linePrefix) || line == linePrefix.trimEnd()) {
             "Line must start with the same prefix '$linePrefix' as the first line"
         }
-        if (line.startsWith(marker, linePrefix.length)) break
-        if (linePredicate(line)) list += line.substring(minOf(linePrefix.length, line.length))
+        if (endLine(line)) break
+        if (acceptLine(line)) list += line.substring(minOf(linePrefix.length, line.length))
     }
 }
+
+private fun InputTextReader.readUntilToDirectiveEnd(linePrefix: String, list: MutableList<String>) =
+    readUntilTo(
+        linePrefix, list,
+        endLine = { line ->
+            when {
+                line.startsWith(DIRECTIVE_END, linePrefix.length) -> true
+                line.startsWith(DIRECTIVE_NEXT, linePrefix.length) -> {
+                    putBackLine = linePrefix + DIRECTIVE_START + line.substring(DIRECTIVE_NEXT.length)
+                    true
+                }
+                else -> false
+            }
+        }
+    )
 
 private inline fun <T> buildList(block: ArrayList<T>.() -> Unit): List<T> {
     val result = arrayListOf<T>()

@@ -1,7 +1,6 @@
 <!--- INCLUDE .*print.*
 fun main() { 
--->
-<!--- SUFFIX .*print.*
+----- SUFFIX .*print.*
     .let { println(it) }
 }    
 -->

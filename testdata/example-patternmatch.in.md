@@ -1,28 +1,16 @@
 <!--- INCLUDE .* 
 // include into all examples
--->
-
-<!--- INCLUDE .*01.*
+----- INCLUDE .*01.*
 // include into the first example
--->
-
-<!--- INCLUDE .*02.*
+----- INCLUDE .*02.*
 // include into the second example
--->
-
-<!--- PREFIX .*01.*
+----- PREFIX .*01.*
 // prefix the first example
--->
-
-<!--- PREFIX .*03.*
+----- PREFIX .*03.*
 // prefix the third example
--->
-
-<!--- SUFFIX .*01.*
+----- SUFFIX .*01.*
 // suffix the first example
---> 
-
-<!--- SUFFIX .*02.*
+----- SUFFIX .*02.*
 // suffix the second example
 --> 
 
