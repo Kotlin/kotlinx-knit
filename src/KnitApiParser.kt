@@ -29,15 +29,15 @@ private val REF_MD_LINE_REGEX = Regex("\\| \\[([a-zA-z0-9.]+)]\\(([a-z0-9_/.\\-]
  * <div class="main-subrow "><span><a href="build-json-array.html">buildJsonArray</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="kotlinx.serialization.json//buildJsonArray/#kotlin.Function1[kotlinx.serialization.json.JsonArrayBuilder,kotlin.Unit]/PointingToDeclaration/"><svg width="24" height="24" viewbox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
  *
  * And, for extensions, like this (trimmed):
- * <a href="index.html#kotlinx.serialization.json/JsonBuilder/allowSpecialFloatingPointValues/#/PointingToDeclaration/">allowSpecialFloatingPointValues</a>
+ * <a href="index.html#kotlinx.serialization.json%2FJsonBuilder%2FallowSpecialFloatingPointValues%2F%23%2FPointingToDeclaration%2F">
  */
-private val REF_HTML_NEW_DOKKA_LINE_REGEX = Regex(".*<div class=\"main-subrow \"><span><a href=\"((index.html#)?([a-zA-Z0-9#_/.\\-]+))\">([a-zA-z0-9.]+)</a>.*")
+private val REF_HTML_NEW_DOKKA_LINE_REGEX = Regex(".*<div class=\"main-subrow \"><span><a href=\"((index.html#)?([a-zA-Z0-9%#_/.\\-]+))\">([a-zA-z0-9.]+)</a>.*")
 /*
  * This particular regex is required to extract pointer to top-level function that has multiple overloads.
  * For some reason, such functions have relative links and the pointer is contained in a separate HTML tag.
  * You can examine the source here: https://kotlin.github.io/kotlinx.serialization/kotlinx-serialization-core/kotlinx-serialization-core/kotlinx.serialization/index.html#kotlinx.serialization//serializer/#/PointingToDeclaration/
  */
-private val REF_HTML_NEW_DOKKA_POINTER_REGEX = Regex(".*<span class=\"anchor-icon\" pointing-to=\"([a-zA-Z0-9#_/.\\-]+)\">.*")
+private val REF_HTML_NEW_DOKKA_POINTER_REGEX = Regex(".*<span class=\"anchor-icon\" pointing-to=\"([a-zA-Z0-9%#_/.\\-]+)\">.*")
 
 // link ends with ".html"
 private data class Ref(val link: String, val name: String, val newDokka: Boolean = false)
