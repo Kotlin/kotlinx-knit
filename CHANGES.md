@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.2.1
+
+* Support new Dokka (1.4.0+) links format  
+
 ## Version 0.2.0
 
 * **Knit Kotlin source (`.kt`/`.kts`) files**.
