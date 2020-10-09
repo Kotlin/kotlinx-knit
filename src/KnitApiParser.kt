@@ -5,7 +5,7 @@
 package kotlinx.knit
 
 import java.io.*
-import java.util.HashMap
+import java.util.*
 
 data class ApiIndexKey(
     val docsRoot: String,
@@ -18,7 +18,7 @@ private const val MD_SUFFIX = ".md"
 private const val INDEX_HTML = "/index$HTML_SUFFIX"
 private const val INDEX_MD = "/index$MD_SUFFIX"
 
-private val FUNCTIONS_SECTION_HEADERS = listOf("### Functions", "## Functions", "<h3>Functions</h3>")
+private val FUNCTIONS_SECTION_HEADER = Regex("(?:###|##|<h3>) (?:Functions|Extensions for [a-zA-Z0-9._]+)(?:</h3>)?")
 private val FUNCTION_SECTION_HEADER_NEW_DOKKA = Regex(".*<div class=\"table\" data-togglable=\"([A-Za-z]+)\">.*")
 
 private val REF_HTML_LINE_REGEX = Regex("(?:<h4>)?<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>(?:</h4>)?")
@@ -66,7 +66,7 @@ private fun matchRef(line: String): Ref? {
 
 private fun String.checkFunctionSection(previousValue: Boolean): Boolean {
     // Direct match
-    if (this in FUNCTIONS_SECTION_HEADERS) return true
+    if (this.matches(FUNCTIONS_SECTION_HEADER)) return true
     // New section -- reset previous value. Applicable only to new Dokka
     FUNCTION_SECTION_HEADER_NEW_DOKKA.matchEntire(this)?.let {
         val group = it.groups[1]!!.value
@@ -76,17 +76,36 @@ private fun String.checkFunctionSection(previousValue: Boolean): Boolean {
     return previousValue
 }
 
-private fun HashMap<String, MutableList<String>>.putUnambiguousLink(key: String, value: String) {
-    // Do not contaminate existing links with relative ones
-    val isRelative = value.contains("..")
-    val oldValue = this[key]
-    if (oldValue != null && isRelative) return
-    if (oldValue != null) {
-        oldValue.add(value)
-        put(key, oldValue)
-    } else {
-        put(key, mutableListOf(value))
+class ApiLink(val link: String, val isFunction: Boolean)
+
+// always prefer classes to functions, then prefer shorter links
+private val apiLinkComparator = compareBy(ApiLink::isFunction, { it.link.length })
+
+class ApiIndex {
+    private val m = HashMap<String, MutableList<ApiLink>>()
+    val size: Int get() = m.size
+
+    fun add(name: String, value: ApiLink) {
+        // Do not contaminate existing links with relative ones
+        val isRelative = value.link.contains("..")
+        val list = m[name]
+        if (list != null && isRelative) return
+        if (list != null) {
+            list.add(value)
+        } else {
+            m[name] = mutableListOf(value)
+        }
     }
+
+    fun addAll(other: ApiIndex) {
+        for ((k, list) in other.m) {
+            for (v in list) add(k, v)
+        }
+    }
+
+    // taking the shortest reference among candidates, prefer classes to functions
+    operator fun get(name: String): String? =
+        m[name]?.minWith(apiLinkComparator)?.link
 }
 
 private fun KnitContext.loadApiIndex(
@@ -94,55 +113,62 @@ private fun KnitContext.loadApiIndex(
     path: String,
     indexDirective: String,
     namePrefix: String = ""
-): Map<String, MutableList<String>>? {
+): ApiIndex? {
     // For new Dokka "/" is actively used in index directive
     val pkg = indexDirective.substringAfter("/")
     val fileDir = rootDir / docsRoot / path
     val file = findFile(fileDir, INDEX_MD, INDEX_HTML)
     val visited = mutableSetOf<String>()
-    val map = HashMap<String, MutableList<String>>()
+    val index = ApiIndex()
     var inFunctionsSection = false
+    fun addName(name: String, link: String, isFunction: Boolean) {
+        val apiLink = ApiLink("$path/$link", isFunction)
+        val refName = namePrefix + name
+        val fqName = "$pkg.$refName"
+        // Put shorter names for extensions on 3rd party classes (prefix is FQname of those classes)
+        if (namePrefix != "" && namePrefix[0] in 'a'..'z') {
+            val i = namePrefix.dropLast(1).lastIndexOf('.')
+            if (i >= 0) index.add(namePrefix.substring(i + 1) + name, apiLink)
+            index.add(name, apiLink)
+        }
+        // Additionally disambiguate lower-case names with leading underscore.
+        // This is helpful when there are two classes or functions that differ only in case of the first letter.
+        // Note, that a class can be disambiguated from a function with trailing () for function.
+        if (namePrefix == "" && name[0] in 'a'..'z') {
+            index.add("_$name", apiLink)
+        }
+        // Always put fully qualified names
+        index.add(refName, apiLink)
+        index.add(fqName, apiLink)
+    }
     withLineNumberReader(file, ::LineNumberReader) {
         while (true) {
             val line = readLine() ?: break
             inFunctionsSection = line.checkFunctionSection(inFunctionsSection)
             val ref = matchRef(line) ?: continue
-            var (link, name) = ref
+            val (link, name) = ref
             /**
              * For new Dokka we process some of the relative links because
              * they are the only reference to some declarations.
              * See comment to REF_HTML_NEW_DOKKA_POINTER_REGEX.
              */
             if (link.startsWith("..") && !ref.newDokka) continue // ignore cross-references
-            val isRelative = link.startsWith("..")
-            val likelyAbsLink = "$path/$link"
-            // a special disambiguation fix for pseudo-constructor functions
-            if (inFunctionsSection && name[0] in 'A'..'Z') name += "()"
-            val refName = namePrefix + name
-            val fqName = "$pkg.$refName"
-            // Put shorter names for extensions on 3rd party classes (prefix is FQname of those classes)
-            if (namePrefix != "" && namePrefix[0] in 'a'..'z') {
-                val i = namePrefix.dropLast(1).lastIndexOf('.')
-                if (i >= 0) map.putUnambiguousLink(namePrefix.substring(i + 1) + name, likelyAbsLink)
-                map.putUnambiguousLink(name, likelyAbsLink)
-            }
-            // Disambiguate lower-case names with leading underscore (e.g. Flow class vs flow builder ambiguity)
-            if (namePrefix == "" && name[0] in 'a'..'z') {
-                map.putUnambiguousLink("_$name", likelyAbsLink)
-            }
-            // Always put fully qualified names
-            map.putUnambiguousLink(refName, likelyAbsLink)
-            map.putUnambiguousLink(fqName, likelyAbsLink)
-            if (link.endsWith(INDEX_HTML) && !isRelative) {
+            addName(name, link, inFunctionsSection)
+            // Disambiguation with name() for functions
+            if (inFunctionsSection) addName("$name()", link, inFunctionsSection)
+            // visit linked file if it is not a relative link
+            if (link.endsWith(INDEX_HTML) && !link.startsWith("..")) {
                 if (visited.add(link)) {
                     val path2 = path + "/" + link.substring(0, link.length - INDEX_HTML.length)
-                    map += loadApiIndex(docsRoot, path2, pkg, "$refName.")
-                        ?: throw IllegalArgumentException("Failed to parse $docsRoot/$path2")
+                    index.addAll(
+                        loadApiIndex(docsRoot, path2, pkg, "$namePrefix$name.")
+                            ?: throw IllegalArgumentException("Failed to parse $docsRoot/$path2")
+                    )
                 }
             }
         }
     } ?: return null // return null on failure
-    return map
+    return index
 }
 
 fun findFile(fileDir: File, vararg names: String): File =
@@ -150,13 +176,15 @@ fun findFile(fileDir: File, vararg names: String): File =
         throw FileNotFoundException("Cannot find one of files ${names.joinToString(", ") { "'$it'" } } in $fileDir")
 
 fun KnitContext.processApiIndex(
+    inputFile: File,
     siteRoot: String,
     docsRoot: String,
     pkg: String,
-    remainingApiRefNames: MutableSet<String>
+    remainingApiRefNames: MutableSet<String>,
+    uppercaseApiRefNames: HashMap<String, String>
 ): List<String>? {
     val key = ApiIndexKey(docsRoot, pkg)
-    val map = apiIndexCache.getOrPut(key) {
+    val index = apiIndexCache.getOrPut(key) {
         val result = loadApiIndex(docsRoot, pkg, pkg) ?: return null // null on failure
         log.debug("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
@@ -165,12 +193,14 @@ fun KnitContext.processApiIndex(
     val it = remainingApiRefNames.iterator()
     while (it.hasNext()) {
         val refName = it.next()
-        val refLink = map[refName] ?: continue
-        // taking the shortest reference among candidates
-        val link = refLink.minBy { it.length }
+        val link = index[refName] ?: continue
         val siteLink = "$siteRoot/$link"
         indexList += "[$refName]: $siteLink"
         it.remove()
+        val oldNameCase = uppercaseApiRefNames.put(refName.toUpperCase(Locale.ROOT), refName)
+        if (oldNameCase != null) {
+            log.warn("WARNING: $inputFile: References [$refName] and [$oldNameCase] are different only in case, not distinguishable in markdown.")
+        }
     }
     return indexList
 }
