@@ -34,7 +34,10 @@ class KnitProps(
     private val location: PropsLocation = ResourcesProps,
     private val parent: KnitProps? = null
 ) {
-    private val props: Properties = location.open(KNIT_PROPERTIES).use { Properties().apply { load(it) } }
+    private val props: Properties = Properties().apply {
+        location.open(KNIT_PROPERTIES).use { load(it) }
+        putAll(System.getProperties()) // Support overwrite of built-in resources with system properties
+    }
 
     operator fun get(name: String): String? =
         props.getProperty(name) ?: parent?.get(name)
