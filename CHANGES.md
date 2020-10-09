@@ -1,5 +1,12 @@
 # Change log for kotlinx-knit
 
+## Version 0.2.2
+
+* Warn on markdown reference case conflicts (#20).
+* Support consistent function disambiguation using `name()` syntax and additional `_name` prefix for names with 
+  the lowercase first letters. This way, you can refer to `CoroutineScope` class, `CoroutineScope()` function,
+  and `_coroutineScope` function from the same file without ambiguities. 
+
 ## Version 0.2.1
 
 * Support new Dokka (1.4.0+) links format  
