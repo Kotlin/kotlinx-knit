@@ -7,6 +7,7 @@ package kotlinx.knit
 import kotlinx.knit.test.*
 import java.io.*
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.properties.*
 import kotlin.system.*
 
@@ -148,6 +149,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
     val files = mutableSetOf<File>()
     val allApiRefs = arrayListOf<ApiRef>()
     val remainingApiRefNames = mutableSetOf<String>()
+    val uppercaseApiRefNames = HashMap<String, String>()
     var moduleName: String by Delegates.notNull()
     var docsRoot: String by Delegates.notNull()
     var retryKnitLater = false
@@ -335,7 +337,12 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     requireSingleLine(directive)
                     require(siteRoot != null) { "Missing 'siteRoot' in knit configuration, cannot do $INDEX_DIRECTIVE" }
                     val indexLines = processApiIndex(
-                        "$siteRoot/$moduleName", docsRoot, directive.param, remainingApiRefNames
+                        inputFile,
+                        "$siteRoot/$moduleName",
+                        docsRoot,
+                        directive.param,
+                        remainingApiRefNames,
+                        uppercaseApiRefNames
                     )
                         ?: throw IllegalArgumentException("Failed to load index for ${directive.param}")
                     if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")

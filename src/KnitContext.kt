@@ -41,6 +41,6 @@ class KnitContext(
     val tocRefMap = HashMap<File, List<TocRef>>()
     val fileSet = HashSet(files)
     val fileQueue = ArrayDeque(files)
-    val apiIndexCache = HashMap<ApiIndexKey, Map<String, List<String>>>()
+    val apiIndexCache = HashMap<ApiIndexKey, ApiIndex>()
     val propsCache = HashMap<File, KnitProps>()
 }
