@@ -7,6 +7,7 @@ package kotlinx.knit
 import org.apache.log4j.*
 import org.gradle.api.*
 import org.gradle.api.file.*
+import org.gradle.api.plugins.*
 import org.gradle.api.tasks.*
 import java.io.*
 
@@ -15,6 +16,7 @@ const val DEPENDENCY_GROUP = "org.jetbrains.kotlinx"
 
 class KnitPlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
+        pluginManager.apply(BasePlugin::class.java)
         // Create tasks
         extensions.create("knit", KnitPluginExtension::class.java)
         val knitPrepare = tasks.register("knitPrepare", DefaultTask::class.java) {
