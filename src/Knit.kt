@@ -7,6 +7,7 @@ package kotlinx.knit
 import kotlinx.knit.test.*
 import java.io.*
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.properties.*
 import kotlin.system.*
@@ -345,7 +346,21 @@ fun KnitContext.knit(inputFile: File): Boolean {
                         uppercaseApiRefNames
                     )
                         ?: throw IllegalArgumentException("Failed to load index for ${directive.param}")
-                    if (!replaceUntilNextDirective(indexLines)) error("Unexpected end of file after $INDEX_DIRECTIVE")
+                    /*
+                     * WebHelp format requires a newline between INDEX directive
+                     * and actual references in order to properly parse them.
+                     * Also: https://youtrack.jetbrains.com/issue/WH-2121
+                     */
+                    val result = if (indexLines.isEmpty()) {
+                        indexLines
+                    } else {
+                        val tmp = ArrayList<String>(2 + indexLines.size)
+                        tmp.add("")
+                        tmp.addAll(indexLines)
+                        tmp.add("")
+                        tmp
+                    }
+                    if (!replaceUntilNextDirective(result)) error("Unexpected end of file after $INDEX_DIRECTIVE")
                 }
                 else -> {
                     error("Unrecognized knit directive '${directive.name}' on a line starting with '$DIRECTIVE_START'")

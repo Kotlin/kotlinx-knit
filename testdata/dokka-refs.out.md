@@ -15,6 +15,7 @@ For classes:
 
 <!--- MODULE kotlinx-knit-test -->
 <!--- INDEX kotlinx.knit.test -->
+
 [captureOutput]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
 [captureOutput()]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
 [_captureOutput]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
@@ -25,4 +26,5 @@ For classes:
 [kotlin.collections.List.verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/kotlin.collections.-list/verify-output-lines.html
 [ComputedLinesDiff]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/-computed-lines-diff/index.html
 [kotlinx.knit.test.ComputedLinesDiff]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/-computed-lines-diff/index.html
+
 <!--- END -->
