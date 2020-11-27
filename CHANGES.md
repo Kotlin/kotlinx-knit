@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.2.3
+
+* Additional newlines are added between `INDEX` directives.
+
 ## Version 0.2.2
 
 * Warn on markdown reference case conflicts (#20).
