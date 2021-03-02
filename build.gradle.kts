@@ -17,6 +17,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    jcenter()
     gradlePluginPortal()
 }
 
@@ -25,6 +26,7 @@ allprojects {
     apply(plugin = "org.gradle.maven-publish")
 
     repositories {
+        jcenter()
         mavenCentral()
     }
 
