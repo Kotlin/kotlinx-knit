@@ -5,12 +5,13 @@
 rootProject.name = "kotlinx-knit"
 include("kotlinx-knit-test")
 
-val kotlinVersion: String by settings
-val dokkaVersion: String by settings
-val pluginPublishVersion: String by settings
 
 pluginManagement {
     resolutionStrategy {
+        val kotlinVersion: String by settings
+        val dokkaVersion: String by settings
+        val pluginPublishVersion: String by settings
+
         eachPlugin {
             val id = requested.id.id
             when {

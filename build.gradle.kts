@@ -11,7 +11,14 @@ plugins {
     id("org.jetbrains.dokka") apply false
     id("com.gradle.plugin-publish") apply false
     `java-gradle-plugin`
+    signing
     `maven-publish`
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    gradlePluginPortal()
 }
 
 allprojects {
@@ -20,6 +27,7 @@ allprojects {
 
     repositories {
         jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -43,16 +51,19 @@ allprojects {
 
     // Set version when deploying
     properties["DeployVersion"]?.let { version = it }
-    
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                from(components["java"])
-                mavenCentralArtifacts(project, project.sourceSets.main.allSource)
-            }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
-        mavenCentralMetadata()
-        bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "kotlinx.knit")
+    }
+    mavenCentralMetadata()
+    mavenRepositoryPublishing(project)
+    publications.withType(MavenPublication::class).all {
+        signPublicationIfKeyPresent(this)
     }
 }
 
