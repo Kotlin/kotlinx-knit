@@ -339,7 +339,8 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     require(siteRoot != null) { "Missing 'siteRoot' in knit configuration, cannot do $INDEX_DIRECTIVE" }
                     val indexLines = processApiIndex(
                         inputFile,
-                        "$siteRoot/$moduleName",
+                        siteRoot,
+                        moduleName,
                         docsRoot,
                         directive.param,
                         remainingApiRefNames,

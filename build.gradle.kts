@@ -32,14 +32,15 @@ allprojects {
 
     dependencies {
         implementation(kotlin("stdlib-jdk8"))
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.1")
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.1")
         testImplementation(kotlin("test-junit"))
     }
     
     tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
             languageVersion = "1.3"
-            jvmTarget = "1.6"
-            allWarningsAsErrors = true
+            jvmTarget = "1.8"
         }
     }
 
@@ -101,8 +102,10 @@ val freemarkerVersion: String by project
 
 dependencies {
     implementation(gradleApi())
+    implementation(project(":pathsaver"))
     implementation("org.freemarker:freemarker:$freemarkerVersion")
     implementation(project(":kotlinx-knit-test"))
+    implementation("org.jetbrains.dokka:dokka-core:1.4.30")
 }
 
 val test: Task by tasks.getting {
