@@ -349,7 +349,7 @@ to end one directive and begin the next one.
 
 ### Tests
 
-Knit tool can also automatically generate tests. To set it up you to be generating [example files](#example-files) first
+Knit tool can also automatically generate tests. To set it up you need to be generating [example files](#example-files) first
 and then add the following properties in [`knit.properties`](#knit-properties):
                                                  
 ```properties 
