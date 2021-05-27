@@ -1,24 +1,24 @@
-import kotlinx.knit.build.allSource
-import kotlinx.knit.build.mavenCentralArtifacts
-import org.jetbrains.dokka.gradle.*
-
-apply(plugin = "org.jetbrains.dokka")
-
-val dokka by tasks.getting(DokkaTask::class) {
-    outputFormat = "jekyll"
-    outputDirectory = "$buildDir/dokka"
+plugins {
+    id("org.jetbrains.dokka")
 }
 
-val dokkaHtml by tasks.creating(DokkaTask::class) {
-    outputFormat = "html"
-    outputDirectory = "$buildDir/dokkaHtml"
-}
+tasks {
+    val dokkaVersion: String by project
 
-publishing {
-    publications {
-        create<MavenPublication>("kotlinxKnitTest") {
-            from(components["java"])
-            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
-        }
+    val dokka by creating {
+        dependsOn(dokkaJekyll)
     }
+
+    dokkaJekyll {
+        outputDirectory.set(file("$buildDir/dokka"))
+    }
+
+    dokkaHtml {
+        outputDirectory.set(file("$buildDir/dokkaHtml"))
+    }
+}
+
+dependencies {
+    dokkaHtmlPlugin(project(":pathsaver"))
+    dokkaJekyllPlugin(project(":pathsaver"))
 }

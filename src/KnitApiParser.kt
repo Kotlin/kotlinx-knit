@@ -6,12 +6,14 @@ package kotlinx.knit
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.knit.pathsaver.DocumentableType
 import kotlinx.knit.pathsaver.LINK_INDEX_FILE
 import kotlinx.knit.pathsaver.LinkIndex
-import org.jetbrains.dokka.links.*
+import org.jetbrains.dokka.links.Nullable
+import org.jetbrains.dokka.links.TypeConstructor
+import org.jetbrains.dokka.links.TypeReference
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.LineNumberReader
 import java.util.*
 
 data class ApiIndexKey(
@@ -19,43 +21,10 @@ data class ApiIndexKey(
     val pkg: String
 )
 
-private const val HTML_SUFFIX = ".html"
-private const val MD_SUFFIX = ".md"
-
-private const val INDEX_HTML = "/index$HTML_SUFFIX"
-private const val INDEX_MD = "/index$MD_SUFFIX"
-
-private val FUNCTIONS_SECTION_HEADER = Regex("(?:###|##|<h3>) (?:Functions|Extensions for [a-zA-Z0-9._]+)(?:</h3>)?")
-
-private val REF_HTML_LINE_REGEX = Regex("(?:<h4>)?<a href=\"([a-z0-9_/.\\-]+)\">([a-zA-z0-9.]+)</a>(?:</h4>)?")
-private val REF_MD_LINE_REGEX = Regex("\\| \\[([a-zA-z0-9.]+)]\\(([a-z0-9_/.\\-]+)\\) ?\\|.*")
-
-// link ends with ".html"
-private data class Ref(val link: String, val name: String)
-
-private fun matchRef(line: String): Ref? {
-    REF_HTML_LINE_REGEX.matchEntire(line)?.let {
-        return Ref(link = it.groups[1]!!.value, name = it.groups[2]!!.value)
-    }
-    REF_MD_LINE_REGEX.matchEntire(line)?.let {
-        var link = it.groups[2]!!.value
-        if (link.endsWith(MD_SUFFIX)) link = link.substring(0, link.length - MD_SUFFIX.length) + HTML_SUFFIX
-        return Ref(link = link, name = it.groups[1]!!.value)
-    }
-    return null
-}
-
-private fun String.checkFunctionSection(previousValue: Boolean): Boolean {
-    // Direct match
-    if (this.matches(FUNCTIONS_SECTION_HEADER)) return true
-    // Proceed with previous value
-    return previousValue
-}
-
-class ApiLink(val link: String, val isFunction: Boolean)
+class ApiLink(val link: String, val type: DocumentableType)
 
 // always prefer classes to functions, then prefer shorter links
-private val apiLinkComparator = compareBy(ApiLink::isFunction, { it.link.length })
+private val apiLinkComparator = compareBy(ApiLink::type, { it.link.length })
 
 class ApiIndex {
     private val m = HashMap<String, MutableList<ApiLink>>()
@@ -84,88 +53,8 @@ class ApiIndex {
             m[name]?.minWith(apiLinkComparator)?.link
 }
 
-private fun KnitContext.parseIndexFiles(
-        docsRoot: String,
-        path: String,
-        pkg: String,
-        file: File,
-        namePrefix: String = ""
-): ApiIndex? {
-    val visited = mutableSetOf<String>()
-    val index = ApiIndex()
-    var inFunctionsSection = false
-
-    withLineNumberReader(file, ::LineNumberReader) {
-        while (true) {
-            val line = readLine() ?: break
-            inFunctionsSection = line.checkFunctionSection(inFunctionsSection)
-            val ref = matchRef(line) ?: continue
-            val (link, name) = ref
-            if (link.startsWith("..")) continue // ignore cross-references
-            index.addName(pkg, name, path, link, inFunctionsSection, namePrefix)
-            // Disambiguation with name() for functions
-            if (inFunctionsSection) index.addName(pkg, "$name()", path, link, inFunctionsSection, namePrefix)
-            // visit linked file if it is not a relative link
-            if (link.endsWith(INDEX_HTML) && !link.startsWith("..")) {
-                if (visited.add(link)) {
-                    val path2 = path + "/" + link.substring(0, link.length - INDEX_HTML.length)
-                    index.addAll(
-                        loadApiIndex(docsRoot, path2, pkg, "$namePrefix$name.")
-                            ?: throw IllegalArgumentException("Failed to parse $docsRoot/$path2")
-                    )
-                }
-            }
-        }
-    } ?: return null // return null on failure
-    return index
-}
-
-private fun parseLinkIndexFile(file: File, pkg: String): ApiIndex {
-    val projectIndex = jacksonObjectMapper().readValue<List<LinkIndex>>(file)
-    fun TypeReference.name(): String = when (this) {
-        is TypeConstructor -> fullyQualifiedName
-        is Nullable -> wrapped.name()
-        else -> ""
-    }
-
-    return ApiIndex().apply {
-        projectIndex
-            .filter { it.dri.packageName?.equals(pkg, ignoreCase = true) == true }
-            .forEach { entry ->
-                val pkgName = entry.dri.packageName.orEmpty()
-                val isFunction = entry.dri.mayBeAFunction()
-                val classNames = entry.dri.classNames
-                val callable = entry.dri.callable
-                val receiverName = callable?.receiver?.name()?.takeIf(String::isNotBlank)?.let { "$it." }.orEmpty()
-                val path = entry.location.substringBefore("/")
-                val location = entry.location.substringAfter("/")
-
-                if (callable != null) {
-                    addName(pkgName, callable.name, path, location, isFunction, "")
-                    if (isFunction)
-                        addName(pkgName, callable.name + "()", path, location, isFunction, "")
-                    if (classNames == null) {
-                        addName(pkgName, callable.name, path, location, isFunction, receiverName)
-                        if (isFunction)
-                            addName(pkgName, callable.name + "()", path, location, isFunction, receiverName)
-                    } else {
-                        addName(pkgName, callable.name, path, location, isFunction, "$classNames.")
-                        if (isFunction)
-                            addName(pkgName, callable.name + "()", path, location, isFunction, "$classNames.")
-                    }
-                } else {
-                    if (classNames != null) {
-                        addName(pkgName, classNames, path, location, isFunction, "")
-                    }
-                }
-            }
-    }
-}
-
-private fun DRI.mayBeAFunction() = callable != null
-
-private fun ApiIndex.addName(pkg: String, name: String, path: String, link: String, isFunction: Boolean, namePrefix: String) {
-    val apiLink = ApiLink("$path/$link", isFunction)
+private fun ApiIndex.addName(pkg: String, name: String, path: String, link: String, type: DocumentableType, namePrefix: String) {
+    val apiLink = ApiLink("$path/$link", type)
     val refName = namePrefix + name
     val fqName = "$pkg.$refName"
     // Put shorter names for extensions on 3rd party classes (prefix is FQname of those classes)
@@ -187,25 +76,65 @@ private fun ApiIndex.addName(pkg: String, name: String, path: String, link: Stri
 
 private fun KnitContext.loadApiIndex(
         docsRoot: String,
-        path: String,
-        indexDirective: String,
-        moduleName: String,
-        namePrefix: String = ""
+        indexDirective: String
 ): ApiIndex? {
     val pkg = indexDirective.substringAfter("/")
-    val fileDir = rootDir / docsRoot / path
 
-    return findFileOrNull((rootDir / docsRoot).parentFile, LINK_INDEX_FILE)?.let {
+    return findFileOrNull((rootDir / docsRoot), LINK_INDEX_FILE)?.let {
         parseLinkIndexFile(it, pkg)
-    } ?: parseIndexFiles(docsRoot, "$moduleName/$path", pkg, findFile(fileDir, INDEX_MD, INDEX_HTML), namePrefix)
+    }
 }
 
-fun findFile(fileDir: File, vararg names: String): File =
+private fun parseLinkIndexFile(file: File, pkg: String): ApiIndex {
+    val projectIndex = jacksonObjectMapper().readValue<List<LinkIndex>>(file)
+    fun TypeReference.name(): String = when (this) {
+        is TypeConstructor -> fullyQualifiedName
+        is Nullable -> wrapped.name()
+        else -> ""
+    }
+
+    return ApiIndex().apply {
+        projectIndex
+                .filter { it.dri.packageName?.equals(pkg, ignoreCase = true) == true }
+                .filter { it.type != DocumentableType.Parameter } // we don't want links to functions' parameters
+                .forEach { entry ->
+                    val pkgName = entry.dri.packageName.orEmpty()
+                    val isFunction = entry.type == DocumentableType.Function // type is null when the link is to an external entity, so we assume that it may be a function
+                    val classNames = entry.dri.classNames
+                    val callable = entry.dri.callable
+                    val receiverName = callable?.receiver?.name()?.takeIf(String::isNotBlank)?.let { "$it." }.orEmpty()
+                    val path = entry.location.substringBefore("/")
+                    val location = entry.location.substringAfter("/")
+
+                    if (callable != null) {
+                        addName(pkgName, callable.name, path, location, entry.type, "")
+                        if (isFunction)
+                            addName(pkgName, callable.name + "()", path, location, entry.type, "")
+                        if (classNames == null) {
+                            addName(pkgName, callable.name, path, location, entry.type, receiverName)
+                            if (isFunction)
+                                addName(pkgName, callable.name + "()", path, location, entry.type, receiverName)
+                        } else {
+                            addName(pkgName, callable.name, path, location, entry.type, "$classNames.")
+                            if (isFunction)
+                                addName(pkgName, callable.name + "()", path, location, entry.type, "$classNames.")
+                        }
+                    } else {
+                        if (classNames != null) {
+                            addName(pkgName, classNames, path, location, entry.type, "")
+                        }
+                    }
+                }
+    }
+}
+
+private fun findFileOrNull(fileDir: File, vararg names: String): File? = runCatching { findFile(fileDir, *names) }.getOrNull()
+
+private fun findFile(fileDir: File, vararg names: String): File =
         names.map { fileDir / it }.firstOrNull { it.exists() }
                 ?: throw FileNotFoundException("Cannot find one of files ${names.joinToString(", ") { "'$it'" }} in $fileDir")
 
-fun findFileOrNull(fileDir: File, vararg names: String): File? = runCatching { findFile(fileDir, *names) }.getOrNull()
-
+@Suppress("UNUSED_PARAMETER") // moduleName will be used with Dokka multi-module generation
 fun KnitContext.processApiIndex(
     inputFile: File,
     siteRoot: String,
@@ -217,7 +146,7 @@ fun KnitContext.processApiIndex(
 ): List<String>? {
     val key = ApiIndexKey(docsRoot, pkg)
     val index = apiIndexCache.getOrPut(key) {
-        val result = loadApiIndex(docsRoot, pkg, pkg, moduleName) ?: return null // null on failure
+        val result = loadApiIndex(docsRoot, pkg) ?: return null // null on failure
         log.debug("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
     }

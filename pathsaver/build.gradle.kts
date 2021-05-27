@@ -2,10 +2,12 @@ plugins {
     java
 }
 
+val dokkaVersion: String by project
+
 dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.1")
-    implementation("org.jetbrains.dokka:dokka-base:1.4.30")
-    compileOnly("org.jetbrains.dokka:dokka-core:1.4.30")
+    implementation("org.jetbrains.dokka:dokka-base:$dokkaVersion")
+    compileOnly("org.jetbrains.dokka:dokka-core:$dokkaVersion")
 }
 
 publishing {

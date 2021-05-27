@@ -20,10 +20,11 @@ For classes:
 [captureOutput()]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
 [_captureOutput]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
 [kotlinx.knit.test.captureOutput]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/capture-output.html
-[verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/kotlin.collections.-list/verify-output-lines.html
-[verifyOutputLines()]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/kotlin.collections.-list/verify-output-lines.html
-[List.verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/kotlin.collections.-list/verify-output-lines.html
-[kotlin.collections.List.verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/kotlin.collections.-list/verify-output-lines.html
+[verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/verify-output-lines.html
+[verifyOutputLines()]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/verify-output-lines.html
+[_verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/verify-output-lines.html
+[List.verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/verify-output-lines.html
+[kotlin.collections.List.verifyOutputLines]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/verify-output-lines.html
 [ComputedLinesDiff]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/-computed-lines-diff/index.html
 [kotlinx.knit.test.ComputedLinesDiff]: https://example.com/kotlinx-knit-test/kotlinx.knit.test/-computed-lines-diff/index.html
 
