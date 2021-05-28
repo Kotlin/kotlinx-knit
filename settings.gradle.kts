@@ -4,6 +4,7 @@
 
 rootProject.name = "kotlinx-knit"
 include("kotlinx-knit-test")
+include("pathsaver")
 
 
 pluginManagement {
