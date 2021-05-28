@@ -101,13 +101,14 @@ val deploy: Task by tasks.creating {
 }
 
 val freemarkerVersion: String by project
+val dokkaVersion: String by project
 
 dependencies {
     implementation(gradleApi())
     implementation(project(":pathsaver"))
     implementation("org.freemarker:freemarker:$freemarkerVersion")
     implementation(project(":kotlinx-knit-test"))
-    implementation("org.jetbrains.dokka:dokka-core:1.4.30")
+    implementation("org.jetbrains.dokka:dokka-core:$dokkaVersion")
 }
 
 val test: Task by tasks.getting {
