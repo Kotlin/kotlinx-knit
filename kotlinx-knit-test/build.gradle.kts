@@ -1,8 +1,9 @@
-import kotlinx.knit.build.mavenCentralArtifacts
-import kotlinx.knit.build.allSource
+import kotlinx.knit.build.*
 
 plugins {
     id("org.jetbrains.dokka")
+    signing
+    `maven-publish`
 }
 
 tasks {
@@ -32,5 +33,11 @@ publishing {
             from(components["java"])
             mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
+    }
+
+    mavenCentralMetadata()
+    mavenRepositoryPublishing(project)
+    publications.withType(MavenPublication::class).all {
+        signPublicationIfKeyPresent(this)
     }
 }

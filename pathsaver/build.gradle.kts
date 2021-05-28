@@ -1,5 +1,10 @@
+import com.gradle.publish.*
+import kotlinx.knit.build.*
+
 plugins {
     java
+    signing
+    `maven-publish`
 }
 
 val dokkaVersion: String by project
@@ -16,5 +21,11 @@ publishing {
             artifactId = "dokka-pathsaver-plugin"
             from(components["java"])
         }
+    }
+
+    mavenCentralMetadata()
+    mavenRepositoryPublishing(project)
+    publications.withType(MavenPublication::class).all {
+        signPublicationIfKeyPresent(this)
     }
 }
