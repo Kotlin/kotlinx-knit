@@ -20,6 +20,7 @@ publishing {
         register<MavenPublication>("dokkaPlugin") {
             artifactId = "dokka-pathsaver-plugin"
             from(components["java"])
+            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
     }
 
