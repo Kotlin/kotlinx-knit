@@ -90,6 +90,7 @@ open class KnitPluginExtension {
     var moduleDocs: String = globalDefaults.moduleDocs
     var files: FileCollection? = null
     var rootDir: File? = null
+    var dokkaMultiModuleRoot: String = globalDefaults.dokkaMultiModuleRoot
 
     fun createContext(files: Collection<File>, rootDir: File, check: Boolean) = KnitContext(
         log = LoggerLog(),
@@ -97,7 +98,8 @@ open class KnitPluginExtension {
             siteRoot = siteRoot,
             moduleRoots = moduleRoots,
             moduleMarkers = moduleMarkers,
-            moduleDocs =  moduleDocs
+            moduleDocs =  moduleDocs,
+            dokkaMultiModuleRoot = dokkaMultiModuleRoot
         ),
         files = files,
         rootDir = rootDir,

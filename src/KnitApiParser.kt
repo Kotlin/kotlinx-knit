@@ -8,7 +8,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.knit.pathsaver.DocumentableType
 import kotlinx.knit.pathsaver.LINK_INDEX_FILE
-import kotlinx.knit.pathsaver.LinkIndex
+import kotlinx.knit.pathsaver.LinkIndexEntry
 import org.jetbrains.dokka.links.Nullable
 import org.jetbrains.dokka.links.TypeConstructor
 import org.jetbrains.dokka.links.TypeReference
@@ -18,6 +18,7 @@ import java.util.*
 
 data class ApiIndexKey(
     val docsRoot: String,
+    val moduleName: String,
     val pkg: String
 )
 
@@ -76,17 +77,18 @@ private fun ApiIndex.addName(pkg: String, name: String, path: String, link: Stri
 
 private fun KnitContext.loadApiIndex(
         docsRoot: String,
-        indexDirective: String
+        indexDirective: String,
+        moduleName: String
 ): ApiIndex? {
     val pkg = indexDirective.substringAfter("/")
 
     return findFileOrNull((rootDir / docsRoot), LINK_INDEX_FILE)?.let {
-        parseLinkIndexFile(it, pkg)
+        parseLinkIndexFile(it, pkg, moduleName)
     }
 }
 
-private fun parseLinkIndexFile(file: File, pkg: String): ApiIndex {
-    val projectIndex = jacksonObjectMapper().readValue<List<LinkIndex>>(file)
+private fun parseLinkIndexFile(file: File, pkg: String, moduleName: String): ApiIndex {
+    val projectIndex = jacksonObjectMapper().readValue<List<LinkIndexEntry>>(file)
     fun TypeReference.name(): String = when (this) {
         is TypeConstructor -> fullyQualifiedName
         is Nullable -> wrapped.name()
@@ -95,7 +97,8 @@ private fun parseLinkIndexFile(file: File, pkg: String): ApiIndex {
 
     return ApiIndex().apply {
         projectIndex
-                .filter { it.dri.packageName?.equals(pkg, ignoreCase = true) == true }
+                .filter { it.dri.extra?.equals(moduleName, ignoreCase = true) ?: true  }
+                .filter { it.dri.packageName?.equals(pkg, ignoreCase = true) ?: true  }
                 .filter { it.type != DocumentableType.Parameter } // we don't want links to functions' parameters
                 .forEach { entry ->
                     val pkgName = entry.dri.packageName.orEmpty()
@@ -134,7 +137,6 @@ private fun findFile(fileDir: File, vararg names: String): File =
         names.map { fileDir / it }.firstOrNull { it.exists() }
                 ?: throw FileNotFoundException("Cannot find one of files ${names.joinToString(", ") { "'$it'" }} in $fileDir")
 
-@Suppress("UNUSED_PARAMETER") // moduleName will be used with Dokka multi-module generation
 fun KnitContext.processApiIndex(
     inputFile: File,
     siteRoot: String,
@@ -144,9 +146,9 @@ fun KnitContext.processApiIndex(
     remainingApiRefNames: MutableSet<String>,
     uppercaseApiRefNames: HashMap<String, String>
 ): List<String>? {
-    val key = ApiIndexKey(docsRoot, pkg)
+    val key = ApiIndexKey(docsRoot, moduleName, pkg)
     val index = apiIndexCache.getOrPut(key) {
-        val result = loadApiIndex(docsRoot, pkg) ?: return null // null on failure
+        val result = loadApiIndex(docsRoot, pkg, moduleName) ?: return null // null on failure
         log.debug("Parsed API docs at $docsRoot/$pkg: ${result.size} definitions")
         result
     }

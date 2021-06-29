@@ -12,6 +12,7 @@ val dokkaVersion: String by project
 dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.1")
     implementation("org.jetbrains.dokka:dokka-base:$dokkaVersion")
+    implementation("org.jetbrains.dokka:templating-plugin:$dokkaVersion")
     compileOnly("org.jetbrains.dokka:dokka-core:$dokkaVersion")
 }
 
