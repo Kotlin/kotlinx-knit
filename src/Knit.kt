@@ -332,7 +332,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     requireSingleLine(directive)
                     val isRoot = directive.param.startsWith('/')
                     moduleName = if (isRoot) directive.param.substring(1) else directive.param
-                    docsRoot = findModuleRoot(isRoot, moduleName) + "/" + moduleDocs + "/" + moduleName
+                    docsRoot = findMultiModuleRoot() ?: findModuleRoot(isRoot, moduleName) + "/" + moduleDocs + "/" + moduleName
                 }
                 INDEX_DIRECTIVE -> {
                     requireSingleLine(directive)
@@ -686,6 +686,9 @@ fun KnitContext.writeLines(file: File, lines: List<String>) {
         lines.forEach { out.println(it) }
     }
 }
+
+fun KnitContext.findMultiModuleRoot(): String? =
+        dokkaMultiModuleRoot.takeIf { rootDir.resolve(it).exists() }
 
 fun KnitContext.findModuleRoot(isRoot: Boolean, name: String): String =
     moduleRoots

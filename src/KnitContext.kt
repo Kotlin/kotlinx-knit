@@ -11,20 +11,23 @@ open class KnitGlobals(
     val siteRoot: String?, // only needed for INDEX directive
     val moduleRoots: List<String>,
     val moduleMarkers: List<String>,
-    val moduleDocs: String
+    val moduleDocs: String,
+    val dokkaMultiModuleRoot: String
 ) {
     constructor(props: KnitProps) : this(
         siteRoot = props.getValue("site.root"),
         moduleRoots = props.getValue("module.roots").split(","),
         moduleMarkers = props.getValue("module.markers").split(","),
-        moduleDocs = props.getValue("module.docs")
+        moduleDocs = props.getValue("module.docs"),
+        dokkaMultiModuleRoot = props.getValue("multimodule.docs")
     )
 
     constructor(globals: KnitGlobals) : this(
         siteRoot = globals.siteRoot,
         moduleRoots = globals.moduleRoots,
         moduleMarkers = globals.moduleMarkers,
-        moduleDocs = globals.moduleDocs
+        moduleDocs = globals.moduleDocs,
+        dokkaMultiModuleRoot = globals.dokkaMultiModuleRoot
     )
 }
 
