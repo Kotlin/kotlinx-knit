@@ -6,8 +6,11 @@ rootProject.name = "kotlinx-knit"
 include("kotlinx-knit-test")
 include("pathsaver")
 
-
 pluginManagement {
+    repositories {
+        maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev/")
+        gradlePluginPortal()
+    }
     resolutionStrategy {
         val kotlinVersion: String by settings
         val dokkaVersion: String by settings
