@@ -17,7 +17,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev/")
     jcenter()
     gradlePluginPortal()
 }
@@ -27,7 +26,6 @@ allprojects {
     apply(plugin = "org.gradle.maven-publish")
 
     repositories {
-        maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev/")
         jcenter()
         mavenCentral()
     }
