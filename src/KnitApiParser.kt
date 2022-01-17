@@ -51,7 +51,7 @@ class ApiIndex {
 
     // taking the shortest reference among candidates, prefer classes to functions
     operator fun get(name: String): String? =
-            m[name]?.minWith(apiLinkComparator)?.link
+            m[name]?.minWithOrNull(apiLinkComparator)?.link
 }
 
 private fun ApiIndex.addName(pkg: String, name: String, path: String, link: String, type: DocumentableType, namePrefix: String) {
@@ -160,7 +160,7 @@ fun KnitContext.processApiIndex(
         val siteLink = "$siteRoot/$link"
         indexList += "[$refName]: $siteLink"
         it.remove()
-        val oldNameCase = uppercaseApiRefNames.put(refName.toUpperCase(Locale.ROOT), refName)
+        val oldNameCase = uppercaseApiRefNames.put(refName.uppercase(), refName)
         if (oldNameCase != null) {
             log.warn("WARNING: $inputFile: References [$refName] and [$oldNameCase] are different only in case, not distinguishable in markdown.")
         }

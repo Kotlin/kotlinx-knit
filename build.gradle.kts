@@ -17,7 +17,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    jcenter()
     gradlePluginPortal()
 }
 
@@ -26,7 +25,6 @@ allprojects {
     apply(plugin = "org.gradle.maven-publish")
 
     repositories {
-        jcenter()
         mavenCentral()
     }
 
@@ -39,7 +37,7 @@ allprojects {
     
     tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
-            languageVersion = "1.3"
+            languageVersion = "1.5" // must be the version that is bundled into the current Gradle
             jvmTarget = "1.8"
             freeCompilerArgs = freeCompilerArgs + listOf("-Xskip-runtime-version-check")
             allWarningsAsErrors = true
