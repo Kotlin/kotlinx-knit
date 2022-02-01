@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.3.0
+
+* Support new Dokka multi-module structure.
+
 ## Version 0.2.3
 
 * Additional newlines are added between `INDEX` directives.
