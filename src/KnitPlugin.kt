@@ -18,7 +18,7 @@ class KnitPlugin : Plugin<Project> {
         // Create tasks
         extensions.create("knit", KnitPluginExtension::class.java)
         val knitPrepare = tasks.register("knitPrepare", DefaultTask::class.java) {
-            it.description =  "Prepares dependencies for Knit tool"
+            it.description = "Prepares dependencies for Knit tool"
             it.group = TASK_GROUP
         }
         val knitCheck = tasks.register("knitCheck", KnitTask::class.java) {
@@ -32,9 +32,7 @@ class KnitPlugin : Plugin<Project> {
             it.group = TASK_GROUP
             it.dependsOn(knitPrepare)
         }
-        tasks.named("check").configure {
-            it.dependsOn(knitCheck)
-        }
+        checkDependsOn(knitCheck)
         // Configure default version resolution for 'kotlinx-knit-test'
         val pluginVersion = rootProject.buildscript.configurations.findByName("classpath")
             ?.allDependencies?.find { it.group == DEPENDENCY_GROUP && it.name == "kotlinx-knit" }?.version
@@ -47,6 +45,17 @@ class KnitPlugin : Plugin<Project> {
                         dependency.useVersion(pluginVersion)
                     }
                 }
+            }
+        }
+    }
+}
+
+private fun Project.checkDependsOn(other: TaskProvider<*>) {
+    afterEvaluate {
+        // afterEvaluate because the order of plugin application does not reflect declaration order in some Gradle versions
+        if (pluginManager.hasPlugin("base")) {
+            tasks.named("check").configure {
+                it.dependsOn(other)
             }
         }
     }
@@ -98,7 +107,7 @@ open class KnitPluginExtension {
             siteRoot = siteRoot,
             moduleRoots = moduleRoots,
             moduleMarkers = moduleMarkers,
-            moduleDocs =  moduleDocs,
+            moduleDocs = moduleDocs,
             dokkaMultiModuleRoot = dokkaMultiModuleRoot
         ),
         files = files,
