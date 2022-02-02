@@ -434,7 +434,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
         }
         addAll(markdown.postTocText)
     }
-    if (newLines != markdown.inText) writeLines(inputFile, newLines)
+    if (newLines != markdown.inText) writeLinesIfNeeded(inputFile, newLines)
     // check apiRefs
     for (apiRef in allApiRefs) {
         if (apiRef.name in remainingApiRefNames) {
