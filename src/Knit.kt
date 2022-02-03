@@ -434,7 +434,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
         }
         addAll(markdown.postTocText)
     }
-    if (newLines != markdown.inText) writeLinesIfNeeded(inputFile, newLines)
+    if (newLines != markdown.inText) checkOrWrite(inputFile, markdown.inText, newLines)
     // check apiRefs
     for (apiRef in allApiRefs) {
         if (apiRef.name in remainingApiRefNames) {
@@ -662,12 +662,16 @@ fun KnitContext.writeLinesIfNeeded(file: File, outLines: List<String>) {
         null
     }
     if (outLines != oldLines) {
-        if (check) {
-            val text = formatOutdated(oldLines, outLines)
-            log.outdated("WARNING: $file: $text")
-        } else {
-            writeLines(file, outLines)
-        }
+        checkOrWrite(file, oldLines, outLines)
+    }
+}
+
+private fun KnitContext.checkOrWrite(file: File, oldLines: List<String>?, outLines: List<String>) {
+    if (check) {
+        val text = formatOutdated(oldLines, outLines)
+        log.outdated("WARNING: $file: $text")
+    } else {
+        writeLines(file, outLines)
     }
 }
 
