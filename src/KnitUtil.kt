@@ -5,6 +5,7 @@
 package kotlinx.knit
 
 import java.io.*
+import java.util.*
 
 fun <T : LineNumberReader> KnitContext.withLineNumberReader(file: File, factory: (Reader) -> T, block: T.() -> Unit): T? {
     val reader = factory(file.reader())
@@ -20,3 +21,11 @@ fun <T : LineNumberReader> KnitContext.withLineNumberReader(file: File, factory:
 }
 
 operator fun File.div(path: String): File = File(this, path.replace("/", File.separator))
+
+internal fun String.capitalizeFirstChar() = this.replaceFirstChar {
+    if (it.isLowerCase()) {
+        it.titlecase(Locale.getDefault())
+    } else {
+        it.toString()
+    }
+}

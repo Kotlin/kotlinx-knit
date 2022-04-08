@@ -39,9 +39,8 @@ allprojects {
     
     tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
-            languageVersion = "1.3"
+            languageVersion = "1.6"
             jvmTarget = "1.8"
-            freeCompilerArgs = freeCompilerArgs + listOf("-Xskip-runtime-version-check")
             allWarningsAsErrors = true
         }
     }
