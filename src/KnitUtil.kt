@@ -5,7 +5,6 @@
 package kotlinx.knit
 
 import java.io.*
-import java.util.*
 
 fun <T : LineNumberReader> KnitContext.withLineNumberReader(file: File, factory: (Reader) -> T, block: T.() -> Unit): T? {
     val reader = factory(file.reader())
