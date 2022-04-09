@@ -51,12 +51,9 @@ class KnitPlugin : Plugin<Project> {
 }
 
 private fun Project.checkDependsOn(other: TaskProvider<*>) {
-    afterEvaluate {
-        // afterEvaluate because the order of plugin application does not reflect declaration order in some Gradle versions
-        if (pluginManager.hasPlugin("base")) {
-            tasks.named("check").configure {
-                it.dependsOn(other)
-            }
+    pluginManager.withPlugin("base") {
+        tasks.named("check").configure {
+            it.dependsOn(other)
         }
     }
 }
