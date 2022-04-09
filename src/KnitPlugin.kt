@@ -58,16 +58,20 @@ open class KnitTask : DefaultTask() {
     @Input
     var check: Boolean = false
 
-    @InputDirectory
+    @Internal
     var rootDir: File = ext.rootDir ?: project.rootDir
 
-    @InputFiles
+    @Internal
     var files: FileCollection = ext.files ?: project.fileTree(project.rootDir) {
         it.include("**/*.md")
         it.include("**/*.kt")
         it.include("**/*.kts")
         it.exclude("**/build/*")
         it.exclude("**/.gradle/*")
+    }
+
+    init {
+        outputs.upToDateWhen { false }
     }
 
     @TaskAction
