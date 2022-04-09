@@ -26,7 +26,7 @@ fun createDefaultContext(
         globals = globals,
         files = files,
         rootDir = File(System.getProperty("user.dir")),
-        lineSeparator = System.lineSeparator(),
+        lineSeparator = "\n",
         check = false
     )
 }

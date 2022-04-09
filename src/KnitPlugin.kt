@@ -109,16 +109,17 @@ open class KnitPluginExtension {
     )
 
     private fun evaluateLineSeparator(): String {
+        val unix = "\n"
+        val windows = "\r\n"
         val ls = defaultLineSeparator
-        if (ls != null && ls != "\n" && ls != "\r\n" && ls != "\r") {
+        if (ls != null && ls != unix && ls != windows) {
             throw GradleException(
                 """Knit defaultLineSeparator must be one of:
                 |- Unix (\n)
                 |- Windows (\r\n)
-                |- Classic Mac OS (\r)
             """.trimMargin()
             )
         }
-        return ls ?: System.lineSeparator()
+        return ls ?: unix
     }
 }
