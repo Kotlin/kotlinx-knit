@@ -39,9 +39,10 @@ allprojects {
     
     tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
-            languageVersion = "1.6"
+            languageVersion = "1.4"
             jvmTarget = "1.8"
             allWarningsAsErrors = true
+            freeCompilerArgs = freeCompilerArgs + listOf("-Xsuppress-version-warnings") // suppress deprecated 1.4
         }
     }
 

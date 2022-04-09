@@ -453,7 +453,7 @@ private fun String.capitalizeAfter(char: Char): String = buildString {
     var cap = false
     for (c in this@capitalizeAfter) {
         cap = if (c == char) true else {
-            append(if (cap) c.uppercaseChar() else c)
+            append(if (cap) c.toUpperCase() else c)
             false
         }
     }
@@ -462,7 +462,7 @@ private fun String.capitalizeAfter(char: Char): String = buildString {
 data class TocRef(val levelPrefix: String, val name: String, val ref: String)
 
 fun makeTest(knit: KnitRef, testLines: List<String>, param: String): TestCase =
-    TestCase(knit.props, knit.name, knit.name.capitalizeFirstChar(), param, testLines)
+    TestCase(knit.props, knit.name, knit.name.capitalize(), param, testLines)
 
 @Suppress("unused") // This class is passed to freemarker template
 class TestTemplateEnv(
@@ -542,7 +542,7 @@ private const val skippedTocSymbols = "\\,`*{}[]()/#+.!"
 fun makeSectionRef(name: String): String = name
     .replace(' ', '-')
     .replace(("[" + Regex.escape(skippedTocSymbols) + "]").toRegex(), "")
-    .lowercase()
+    .toLowerCase()
 
 enum class IncludeType { INCLUDE, PREFIX, SUFFIX }
 

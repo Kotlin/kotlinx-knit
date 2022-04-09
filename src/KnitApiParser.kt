@@ -160,7 +160,7 @@ fun KnitContext.processApiIndex(
         val siteLink = "$siteRoot/$link"
         indexList += "[$refName]: $siteLink"
         it.remove()
-        val oldNameCase = uppercaseApiRefNames.put(refName.uppercase(Locale.ROOT), refName)
+        val oldNameCase = uppercaseApiRefNames.put(refName.toUpperCase(Locale.ROOT), refName)
         if (oldNameCase != null) {
             log.warn("WARNING: $inputFile: References [$refName] and [$oldNameCase] are different only in case, not distinguishable in markdown.")
         }
