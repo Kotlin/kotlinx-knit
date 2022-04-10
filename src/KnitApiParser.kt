@@ -51,7 +51,7 @@ class ApiIndex {
 
     // taking the shortest reference among candidates, prefer classes to functions
     operator fun get(name: String): String? =
-            m[name]?.minWith(apiLinkComparator)?.link
+            m[name]?.minWithOrNull(apiLinkComparator)?.link
 }
 
 private fun ApiIndex.addName(pkg: String, name: String, path: String, link: String, type: DocumentableType, namePrefix: String) {

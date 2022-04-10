@@ -50,7 +50,7 @@ private fun writeTest(out: PrintWriter, type: TestCaseType, inPath: Path) {
     val inFileName = inPath.fileName.toString()
     assertTrue(inFileName.endsWith(type.inSuffix))
     val testPrefix = inFileName.substring(0, inFileName.length - type.inSuffix.length)
-    val testName = testPrefix.split("-").map { it.capitalize() }.joinToString("")
+    val testName = testPrefix.split("-").joinToString("") { it.capitalize() }
     val outPath = TEST_DATA_DIR.resolve(testPrefix + type.outSuffix).takeIfExists() ?: inPath
     val propsPath = TEST_DATA_DIR.resolve(testPrefix + PROPERTIES_SUFFIX).takeIfExists()
     val params = mutableListOf<Any?>(testName, inPath, outPath, propsPath)
