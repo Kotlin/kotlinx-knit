@@ -88,7 +88,7 @@ Knit plugin registers the following tasks:
 
 * `knit` &mdash; updates markdown files, samples, and tests.
 * `knitCheck` &mdash; checks that all the files are up-to-date and fail the build if not;
-  it is automatically added as dependency to `check` task and thus is performed on `build`.
+  it is automatically added as dependency to `check` task and thus is performed on `build` if the `base` plugin is applied.
 * `knitPrepare` &mdash; does nothing, but is added as a dependency to both `knit` and `knitCheck` and a
   common place to register all prerequisite tasks like `dokka` (see [Dokka setup](#dokka-setup))    
 
