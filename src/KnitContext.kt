@@ -38,6 +38,7 @@ class KnitContext(
     // files to process
     files: Collection<File>,
     val rootDir: File,
+    val lineSeparator: String,
     val check: Boolean
 ) : KnitGlobals(globals) {
     // state

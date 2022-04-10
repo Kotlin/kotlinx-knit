@@ -101,6 +101,7 @@ open class KnitPluginExtension {
     var files: FileCollection? = null
     var rootDir: File? = null
     var dokkaMultiModuleRoot: String = globalDefaults.dokkaMultiModuleRoot
+    var defaultLineSeparator: String? = null
 
     fun createContext(files: Collection<File>, rootDir: File, check: Boolean) = KnitContext(
         log = LoggerLog(),
@@ -113,6 +114,22 @@ open class KnitPluginExtension {
         ),
         files = files,
         rootDir = rootDir,
+        lineSeparator = evaluateLineSeparator(),
         check = check
     )
+
+    private fun evaluateLineSeparator(): String {
+        val unix = "\n"
+        val windows = "\r\n"
+        val ls = defaultLineSeparator
+        if (ls != null && ls != unix && ls != windows) {
+            throw GradleException(
+                """Knit defaultLineSeparator must be one of:
+                |- Unix (\n)
+                |- Windows (\r\n)
+            """.trimMargin()
+            )
+        }
+        return ls ?: unix
+    }
 }

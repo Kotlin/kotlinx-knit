@@ -107,6 +107,7 @@ knit {
         exclude '**/build/**'
         exclude '**/.gradle/**'
     }
+    defaultLineSeparator = '\n' // line separator used for newly generated files
 }
 ```
 

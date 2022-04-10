@@ -683,11 +683,18 @@ private fun formatOutdated(oldLines: List<String>?, outLines: List<String>) =
         "is not up-to-date, $diff"
     }
 
-fun KnitContext.writeLines(file: File, lines: List<String>) {
-    log.info(" Writing $file ...")
+private fun KnitContext.writeLines(file: File, lines: List<String>) {
+    val lineSep = if (file.exists()) {
+        file.bufferedReader().use {
+            it.firstLineSeparator()
+        } ?: lineSeparator
+    } else {
+        lineSeparator
+    }
+    log.info("Writing $file ...")
     file.parentFile?.mkdirs()
-    file.printWriter().use { out ->
-        lines.forEach { out.println(it) }
+    file.bufferedWriter().use { out ->
+        lines.forEach { out.write("$it$lineSep") }
     }
 }
 
