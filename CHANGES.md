@@ -1,5 +1,12 @@
 # Change log for kotlinx-knit
 
+## Version 0.4.0
+
+* Dokka and Kotlin updated to 1.6.10 (#40).
+* Line separators are unified between across platforms (#37).
+* `knitCheck` task no longer generates TOC (#36).
+* Knit no longer prevents up-to-date checks (#22, #34).
+
 ## Version 0.3.0
 
 * Support new Dokka multi-module structure.

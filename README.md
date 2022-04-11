@@ -2,7 +2,7 @@
 
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Apache license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Download](https://img.shields.io/maven-central/v/org.jetbrains.kotlinx/kotlinx-knit?versionPrefix=0.3&versionSuffix=.0)](https://search.maven.org/artifact/org.jetbrains.kotlinx/kotlinx-knit/0.3.0/pom)
+[![Download](https://img.shields.io/maven-central/v/org.jetbrains.kotlinx/kotlinx-knit?versionPrefix=0.3&versionSuffix=.0)](https://search.maven.org/artifact/org.jetbrains.kotlinx/kotlinx-knit/0.4.0/pom)
 
 Kotlin source code documentation management tool.
 
@@ -73,7 +73,7 @@ Add it to the `build.gradle` in the following way:
 ```groovy        
 buildscript {
     dependencies {
-        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.3.0"
+        classpath "org.jetbrains.kotlinx:kotlinx-knit:0.4.0"
     }
 }
                     
