@@ -18,7 +18,7 @@ dependencies {
 publishing {
     publications {
         register<MavenPublication>("dokkaPlugin") {
-            artifactId = "dokka-pathsaver-plugin"
+            artifactId = "kotlinx-knit-dokka"
             from(components["java"])
         }
     }
