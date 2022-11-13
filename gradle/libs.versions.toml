@@ -7,6 +7,9 @@ jackson = "2.11.1"
 slf4j = "1.7.36"
 freemarker = "2.3.29"
 
+gradlePluginPublish = "1.1.0"
+
+
 [libraries]
 
 ## Kotlin stdlib ##
@@ -48,6 +51,9 @@ gradlePlugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ve
 gradlePlugin-kotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 
 gradlePlugin-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+
+gradlePlugin-gradlePluginPublish = { module = "com.gradle.publish:plugin-publish-plugin", version.ref = "gradlePluginPublish" }
+
 
 [bundles]
 

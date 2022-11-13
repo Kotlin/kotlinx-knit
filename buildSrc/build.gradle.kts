@@ -14,11 +14,8 @@ dependencies {
     implementation(platform(libs.kotlin.bom))
     implementation(libs.gradlePlugin.kotlin)
     implementation(libs.gradlePlugin.dokka)
+    implementation(libs.gradlePlugin.gradlePluginPublish)
 }
-
-//val props = Properties().apply {
-//    project.file("../gradle.properties").inputStream().use { load(it) }
-//}
 
 val projectJvmTarget: String = "11"
 
