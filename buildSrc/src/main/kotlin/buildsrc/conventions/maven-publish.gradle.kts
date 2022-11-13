@@ -1,4 +1,4 @@
-package kotlinx.knit.build.buildsrc.conventions
+package buildsrc.conventions
 
 import buildsrc.config.KotlinKnitBuildSettings
 
@@ -29,9 +29,9 @@ val sonatypeReleaseUrl: Provider<String> = isReleaseVersion.map { isRelease ->
 
 signing {
     useGpgCmd()
-    if (knitSettings.signingKey.isPresent && knitSettings.signingPassword.isPresent) {
+    if (knitSettings.signingKey.isPresent) {
         logger.lifecycle("[maven-publish convention] signing is enabled for ${project.path}")
-        useInMemoryPgpKeys(knitSettings.signingKey.get(), knitSettings.signingPassword.get())
+        useInMemoryPgpKeys(knitSettings.signingKeyId.get(), knitSettings.signingKey.get(), knitSettings.signingKeyPassphrase.get())
     }
 }
 
@@ -41,7 +41,7 @@ afterEvaluate {
     // too early, before all the publications are added. Use .all { }, not .configureEach { },
     // otherwise the signing plugin doesn't create the tasks soon enough.
 
-    if (knitSettings.signingKey.isPresent && knitSettings.signingPassword.isPresent) {
+    if (knitSettings.signingKey.isPresent) {
         publishing.publications.all publication@{
             logger.lifecycle("[maven-publish convention] configuring signature for publication ${this@publication.name} in ${project.path}")
             // closureOf is a Gradle Kotlin DSL workaround: https://github.com/gradle/gradle/issues/19903
