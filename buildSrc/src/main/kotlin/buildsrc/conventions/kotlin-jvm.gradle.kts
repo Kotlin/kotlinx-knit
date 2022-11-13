@@ -18,6 +18,10 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
+java {
+    withSourcesJar()
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
