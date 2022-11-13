@@ -1,7 +1,6 @@
 plugins {
     buildsrc.conventions.base
     buildsrc.conventions.`kotlin-jvm`
-//    buildsrc.conventions.`maven-publish`
     `kotlin-dsl`
     com.gradle.`plugin-publish`
 }
@@ -33,4 +32,14 @@ pluginBundle {
     website = "https://github.com/Kotlin/kotlinx-knit"
     vcsUrl = "https://github.com/Kotlin/kotlinx-knit"
     tags = listOf("kotlin", "documentation", "markdown")
+}
+
+publishing {
+    repositories {
+        // see buildsrc.conventions.`maven-publish` plugin
+        // (copied here because the Gradle publish plugin isn't compatible with the convention plugin.)
+        maven(rootProject.layout.buildDirectory.dir("maven-project-local")) {
+            name = "MavenProjectLocal"
+        }
+    }
 }

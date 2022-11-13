@@ -31,7 +31,11 @@ signing {
     useGpgCmd()
     if (knitSettings.signingKey.isPresent) {
         logger.lifecycle("[maven-publish convention] signing is enabled for ${project.path}")
-        useInMemoryPgpKeys(knitSettings.signingKeyId.get(), knitSettings.signingKey.get(), knitSettings.signingKeyPassphrase.get())
+        useInMemoryPgpKeys(
+            knitSettings.signingKeyId.get(),
+            knitSettings.signingKey.get(),
+            knitSettings.signingKeyPassphrase.get(),
+        )
     }
 }
 
