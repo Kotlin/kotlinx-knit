@@ -108,10 +108,6 @@ abstract class KnitPlugin @Inject constructor(
         }
     }
 
-    private fun Project.configureKnitTasks() {
-
-    }
-
     companion object {
         const val TASK_GROUP = "documentation"
         const val DEPENDENCY_GROUP = "org.jetbrains.kotlinx"
