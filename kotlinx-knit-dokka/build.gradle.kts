@@ -33,3 +33,8 @@ publishing {
         signPublicationIfKeyPresent(this)
     }
 }
+
+val test: Task by tasks.getting {
+    dependsOn(rootProject.tasks.findByPath(":kotlinx-knit-test:dokka"))
+    dependsOn(rootProject.tasks.findByPath(":kotlinx-knit-test:dokkaHtml"))
+}

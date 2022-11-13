@@ -37,7 +37,7 @@ fun verifyTestData(
     if (propFile != null) Files.copy(Resources.getFile(propFile), dir.resolve("knit.properties"))
 
     refs.filterIsInstance<FileRef.Copy>().forEach { ref ->
-        val path = Paths.get(ref.path)
+        val path = Resources.getFile(ref.path)
         Files.copy(path, dir.resolve(path.fileName))
     }
     // run knit
