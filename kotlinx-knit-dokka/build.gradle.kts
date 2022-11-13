@@ -1,9 +1,9 @@
 import kotlinx.knit.build.*
 
 plugins {
+    buildsrc.conventions.`kotlin-jvm`
     signing
     `maven-publish`
-    buildsrc.conventions.`kotlin-jvm`
 }
 
 dependencies {
@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.dokka.templatingPlugin)
     compileOnly(libs.dokka.core)
 
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test-junit5"))
 }
 
 publishing {

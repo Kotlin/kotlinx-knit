@@ -4,8 +4,8 @@
 
 package kotlinx.knit
 
-import org.junit.Test
 import kotlinx.knit.test.*
+import kotlin.test.*
 
 class CaptureVerifyTest {
     @Test
@@ -41,4 +41,3 @@ class CaptureVerifyTest {
         check(1 == 2) { "The check has failed" }
     }
 }
-

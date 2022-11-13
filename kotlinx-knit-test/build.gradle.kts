@@ -20,14 +20,10 @@ tasks.dokkaHtml {
 }
 
 dependencies {
-//    implementation(platform(libs.jackson.bom))
-//    implementation(libs.jackson.kotlin)
-//    implementation(libs.jackson.xml)
-
     dokkaHtmlPlugin(projects.kotlinxKnitDokka)
     dokkaJekyllPlugin(projects.kotlinxKnitDokka)
 
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test-junit5"))
 }
 
 publishing {

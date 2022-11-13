@@ -4,7 +4,6 @@
 
 package kotlinx.knit.test
 
-import org.junit.Test
 import kotlin.random.*
 import kotlin.test.*
 

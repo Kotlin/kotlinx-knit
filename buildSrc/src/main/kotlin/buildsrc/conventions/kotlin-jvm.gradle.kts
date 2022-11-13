@@ -19,5 +19,5 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 tasks.withType<Test>().configureEach {
-    useJUnit()
+    useJUnitPlatform()
 }

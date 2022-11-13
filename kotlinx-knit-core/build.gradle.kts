@@ -1,5 +1,4 @@
 plugins {
-    buildsrc.conventions.base
     buildsrc.conventions.`kotlin-jvm`
 }
 
@@ -16,9 +15,5 @@ dependencies {
     implementation(libs.jackson.kotlin)
     implementation(libs.jackson.xml)
 
-    testImplementation(kotlin("test-junit"))
-}
-
-tasks.withType<Test>().configureEach {
-    systemProperty("TEST_DATA_DIR", layout.buildDirectory.dir("testdata").get().asFile.canonicalPath)
+    testImplementation(kotlin("test-junit5"))
 }

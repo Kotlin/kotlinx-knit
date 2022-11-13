@@ -11,5 +11,5 @@ dependencies {
     implementation(libs.dokka.core)
 
     testImplementation(projects.kotlinxKnitTest)
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test-junit5"))
 }
