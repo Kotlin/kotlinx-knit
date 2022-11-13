@@ -1,10 +1,8 @@
-import kotlinx.knit.build.*
-
 plugins {
     buildsrc.conventions.`kotlin-jvm`
+    buildsrc.conventions.`maven-publish`
     id("org.jetbrains.dokka")
-    signing
-    `maven-publish`
+    buildsrc.conventions.`dokka-docs-share`
 }
 
 val dokka: Task by tasks.creating {
@@ -29,14 +27,20 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("kotlinxKnitTest") {
+            artifactId = "knit-test"
             from(components["java"])
-//            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
     }
+}
 
-    mavenCentralMetadata()
-    mavenRepositoryPublishing(project)
-    publications.withType(MavenPublication::class).all {
-        signPublicationIfKeyPresent(this)
-    }
+val dokkaHtmlSync by tasks.registering(Sync::class) {
+    // Dokka doesn't correct cache tasks, so to prevent unnecessary work manually cache
+    // dokkaHtml task with this sync task. Since Dokka is slow, this helps build speed.
+    from(tasks.dokkaHtml)
+    into(temporaryDir)
+}
+
+configurations.dokkaHtmlDocsElements {
+    // share Dokka HTML with other subprojects
+    outgoing { artifact(dokkaHtmlSync) }
 }
