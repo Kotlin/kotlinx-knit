@@ -1,0 +1,58 @@
+[versions]
+
+kotlin = "1.7.21"
+kotlinx-serialization = "1.4.1"
+dokka = "1.7.20"
+jackson = "2.11.1"
+slf4j = "1.7.36"
+freemarker = "2.3.29"
+
+[libraries]
+
+## Kotlin stdlib ##
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+
+## Jackson ##
+jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
+jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+jackson-xml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml" }
+
+### KotlinX Serialization ##
+#kotlinxSerialization-bom = { module = "org.jetbrains.kotlinx:kotlinx-serialization-bom", version.ref = "kotlinx-serialization" }
+#kotlinxSerialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core" }
+#kotlinxSerialization-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor" }
+#kotlinxSerialization-hocon = { module = "org.jetbrains.kotlinx:kotlinx-serialization-hocon" }
+#kotlinxSerialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json" }
+#kotlinxSerialization-properties = { module = "org.jetbrains.kotlinx:kotlinx-serialization-properties" }
+#kotlinxSerialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf" }
+#kotlinxSerialization-jsonOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio" }
+
+
+## Freemarker ##
+freemarker = { module = "org.freemarker:freemarker", version.ref = "freemarker" }
+
+## Dokka ##
+dokka-core = { module = "org.jetbrains.dokka:dokka-core", version.ref = "dokka" }
+dokka-base = { module = "org.jetbrains.dokka:dokka-base", version.ref = "dokka" }
+dokka-templatingPlugin = { module = "org.jetbrains.dokka:templating-plugin", version.ref = "dokka" }
+
+
+## Logging ##
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+
+
+
+### Gradle plugins ###
+# Maven coordinates of Gradle plugins. Used in ./build-logic/build.gradle.kts.
+gradlePlugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+gradlePlugin-kotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
+
+gradlePlugin-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+
+[bundles]
+
+
+[plugins]
+
+# define plugins in ./build-logic/build.gradle.kts to avoid error:
+# The Kotlin Gradle plugin was loaded multiple times in different subprojects, which is not supported and may break the build.

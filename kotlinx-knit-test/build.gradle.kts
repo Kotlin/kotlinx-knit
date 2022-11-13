@@ -1,37 +1,40 @@
 import kotlinx.knit.build.*
 
 plugins {
+    buildsrc.conventions.`kotlin-jvm`
     id("org.jetbrains.dokka")
     signing
     `maven-publish`
 }
 
-tasks {
-    val dokkaVersion: String by project
+val dokka: Task by tasks.creating {
+    dependsOn(tasks.dokkaJekyll)
+}
 
-    val dokka by creating {
-        dependsOn(dokkaJekyll)
-    }
+tasks.dokkaJekyll {
+    outputDirectory.set(file("$buildDir/dokka"))
+}
 
-    dokkaJekyll {
-        outputDirectory.set(file("$buildDir/dokka"))
-    }
-
-    dokkaHtml {
-        outputDirectory.set(file("$buildDir/dokkaHtml"))
-    }
+tasks.dokkaHtml {
+    outputDirectory.set(file("$buildDir/dokkaHtml"))
 }
 
 dependencies {
-    dokkaHtmlPlugin(project(":pathsaver"))
-    dokkaJekyllPlugin(project(":pathsaver"))
+//    implementation(platform(libs.jackson.bom))
+//    implementation(libs.jackson.kotlin)
+//    implementation(libs.jackson.xml)
+
+    dokkaHtmlPlugin(projects.kotlinxKnitDokka)
+    dokkaJekyllPlugin(projects.kotlinxKnitDokka)
+
+    testImplementation(kotlin("test-junit"))
 }
 
 publishing {
     publications {
         create<MavenPublication>("kotlinxKnitTest") {
             from(components["java"])
-            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
+//            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
     }
 
