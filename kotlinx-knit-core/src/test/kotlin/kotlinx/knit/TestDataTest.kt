@@ -26,7 +26,7 @@ class TestDataTest {
            "DokkaBasic",
            "testdata/dokka-basic.in.md",
            "testdata/dokka-basic.out.md",
-           null
+           "testdata/dokka-basic.properties"
        )
     }
 
@@ -48,7 +48,7 @@ class TestDataTest {
            "DokkaRefs",
            "testdata/dokka-refs.in.md",
            "testdata/dokka-refs.out.md",
-           null
+           "testdata/dokka-refs.properties"
        )
     }
 

@@ -13,6 +13,6 @@ For classes:
 * [ComputedLinesDiff] is a simple reference.
 * [kotlinx.knit.test.ComputedLinesDiff] is a fully qualified reference.
 
-<!--- MODULE kotlinx-knit-test -->
+<!--- MODULE /kotlinx-knit-test -->
 <!--- INDEX kotlinx.knit.test -->
 <!--- END -->
