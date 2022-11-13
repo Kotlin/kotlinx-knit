@@ -11,6 +11,7 @@ import org.gradle.api.Project
 import org.gradle.api.attributes.Usage
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
@@ -109,7 +110,7 @@ abstract class KnitPlugin @Inject constructor(
     }
 
     companion object {
-        const val TASK_GROUP = "documentation"
+        const val TASK_GROUP = JavaBasePlugin.DOCUMENTATION_GROUP
         const val DEPENDENCY_GROUP = "org.jetbrains.kotlinx"
         const val EXTENSION_NAME = "knit"
         const val TASK_NAME_KNIT = "knit"
