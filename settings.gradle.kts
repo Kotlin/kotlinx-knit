@@ -3,26 +3,16 @@
  */
 
 rootProject.name = "kotlinx-knit"
-include("kotlinx-knit-test")
-include("pathsaver")
 
-pluginManagement {
-    repositories {
-        maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev/")
-        gradlePluginPortal()
-    }
-    resolutionStrategy {
-        val kotlinVersion: String by settings
-        val dokkaVersion: String by settings
-        val pluginPublishVersion: String by settings
+apply(from = "buildSrc/repositories.settings.gradle.kts")
 
-        eachPlugin {
-            val id = requested.id.id
-            when {
-                id.startsWith("org.jetbrains.kotlin.") -> useVersion(kotlinVersion)
-                id == "org.jetbrains.dokka" -> useVersion(dokkaVersion)
-                id == "com.gradle.plugin-publish" -> useVersion(pluginPublishVersion)
-            }
-        }
-    }
-}
+
+include(
+    ":kotlinx-knit-core",
+    ":kotlinx-knit-dokka",
+    ":kotlinx-knit-gradle",
+    ":kotlinx-knit-test",
+)
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
