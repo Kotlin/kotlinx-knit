@@ -14,6 +14,7 @@ abstract class KnitTask : DefaultTask() {
     private val ext: KnitPluginExtension = project.extensions.getByType()
 
     @get:Input
+    @get:Optional
     abstract val check: Property<Boolean>
 
     @get:Internal
