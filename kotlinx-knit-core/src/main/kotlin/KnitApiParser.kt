@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.knit.dokka.DocumentableType
 import kotlinx.knit.dokka.LINK_INDEX_FILE
 import kotlinx.knit.dokka.LinkIndexEntry
+import kotlinx.knit.internal.div
 import org.jetbrains.dokka.links.Nullable
 import org.jetbrains.dokka.links.TypeConstructor
 import org.jetbrains.dokka.links.TypeReference

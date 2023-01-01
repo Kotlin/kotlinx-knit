@@ -4,6 +4,9 @@
 
 package kotlinx.knit
 
+import kotlinx.knit.internal.div
+import kotlinx.knit.internal.firstLineSeparator
+import kotlinx.knit.internal.withLineNumberReader
 import kotlinx.knit.test.*
 import java.io.*
 import java.util.*

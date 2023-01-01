@@ -2,8 +2,9 @@
  * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package kotlinx.knit
+package kotlinx.knit.internal
 
+import kotlinx.knit.KnitContext
 import java.io.*
 
 internal fun <T : LineNumberReader> KnitContext.withLineNumberReader(file: File, factory: (Reader) -> T, block: T.() -> Unit): T? {
