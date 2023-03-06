@@ -42,7 +42,10 @@ allprojects {
             languageVersion = "1.4"
             jvmTarget = "1.8"
             allWarningsAsErrors = true
-            freeCompilerArgs = freeCompilerArgs + listOf("-Xsuppress-version-warnings") // suppress deprecated 1.4
+            freeCompilerArgs = freeCompilerArgs + listOf(
+                "-Xsuppress-version-warnings", // suppress deprecated 1.4
+                "-opt-in=kotlin.RequiresOptIn" // remove after updating languageVersion to 1.7
+            )
         }
     }
 
