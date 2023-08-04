@@ -16,6 +16,8 @@ import org.jetbrains.dokka.pages.RenderingStrategy
 import org.jetbrains.dokka.pages.RootPageNode
 import org.jetbrains.dokka.plugability.DokkaContext
 import org.jetbrains.dokka.plugability.DokkaPlugin
+import org.jetbrains.dokka.plugability.DokkaPluginApiPreview
+import org.jetbrains.dokka.plugability.PluginApiPreviewAcknowledgement
 import org.jetbrains.dokka.templates.TemplateProcessingStrategy
 import org.jetbrains.dokka.templates.TemplatingPlugin
 import org.jetbrains.dokka.transformers.documentation.DocumentableTransformer
@@ -46,6 +48,11 @@ class PathsaverPlugin : DokkaPlugin() {
         templatingPlugin.templateProcessingStrategy providing ::LinkIndexTemplateProcessingStrategy order {
             before(templatingPlugin.fallbackProcessingStrategy)
         }
+    }
+
+    @OptIn(DokkaPluginApiPreview::class)
+    override fun pluginApiPreviewAcknowledgement(): PluginApiPreviewAcknowledgement {
+        return PluginApiPreviewAcknowledgement
     }
 }
 
