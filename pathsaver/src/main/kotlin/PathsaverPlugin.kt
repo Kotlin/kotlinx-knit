@@ -105,7 +105,7 @@ class PathSaver(private val context: DokkaContext) : PageTransformer {
                         .drisList
                         .flatMap { driInfo -> driInfo.sourceSets.map { sourceSet -> driInfo to sourceSet } }
                         .mapNotNull { (driInfo, sourceSet) ->
-                            locationResolver(driInfo.dri, sourceSet)?.let {
+                            locationResolver(driInfo.dri, setOf(sourceSet))?.let {
                                 LinkIndexEntry(
                                         dri = driInfo.dri.copy(extra = context.configuration.moduleName),
                                         sourceSet = listOf(sourceSet.name),
