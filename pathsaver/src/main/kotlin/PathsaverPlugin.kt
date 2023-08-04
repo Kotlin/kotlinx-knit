@@ -51,7 +51,9 @@ class PathsaverPlugin : DokkaPlugin() {
     }
 
     @OptIn(DokkaPluginApiPreview::class)
-    override fun pluginApiPreviewAcknowledgement() = PluginApiPreviewAcknowledgement
+    override fun pluginApiPreviewAcknowledgement(): PluginApiPreviewAcknowledgement {
+        return PluginApiPreviewAcknowledgement
+    }
 }
 
 data class DRIInfo(val dri: DRI, val documentableType: DocumentableType, val sourceSets: Set<DisplaySourceSet>)
