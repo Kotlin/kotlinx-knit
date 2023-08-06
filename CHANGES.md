@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.5.0-Beta
+
+* Dokka and Kotlin updated to 1.8.10 (#56).
+
 ## Version 0.4.0
 
 * Dokka and Kotlin updated to 1.6.10 (#40).
