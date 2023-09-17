@@ -36,7 +36,7 @@ allprojects {
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.1")
         testImplementation(kotlin("test-junit"))
     }
-    
+
     tasks.withType<KotlinCompile> {
         kotlinOptions.apply {
             languageVersion = "1.4"
