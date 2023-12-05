@@ -17,7 +17,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    jcenter()
     gradlePluginPortal()
 }
 
@@ -26,7 +25,6 @@ allprojects {
     apply(plugin = "org.gradle.maven-publish")
 
     repositories {
-        jcenter()
         mavenCentral()
     }
 
@@ -35,6 +33,11 @@ allprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.1")
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.1")
         testImplementation(kotlin("test-junit"))
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     
     tasks.withType<KotlinCompile> {
