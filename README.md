@@ -7,7 +7,7 @@
 
 Kotlin source code documentation management tool.
 
-This is a tool that produces Kotlin source example files and tests from markdown documents
+This is a tool that produces Kotlin source example files and tests from Markdown documents
 with embedded snippets of Kotlin code. It also helps to add links to the API documentation website into the
 documents and has a few other helpful markdown-management features.
 
@@ -20,7 +20,7 @@ which are committed to the VCS. The overall workflow is:
 3. Commit to VCS.
 4. Generated files are automatically verified on subsequent project builds.
 
-Knit does not really parse markdown format or HTML, but understands certain Knit markup patterns and _directives_.
+Knit does not really parse Markdown format or HTML, but understands certain Knit markup patterns and _directives_.
 Directives in markdown files must always start at the beginning of the line and have the following general format for
 single-line directives:
 
@@ -158,7 +158,7 @@ file name, for example:
     
 The name of the example file must match a specific pattern. By default, this pattern's regex is
 `example-[a-zA-Z0-9-]+-##\\.kt`. It can be overridden via `knit.pattern` [property](#knit-properties).
-The sequence of hashes (`#`) in the pattern matches any alpha-numeric sequence and causes the examples to
+The sequence of hashes (`#`) in the pattern matches any alphanumeric sequence and causes the examples to
 be automatically consecutively numbered inside the markdown file. For example, you can add a
 new section of code at the beginning of the document and write in the markdown file:
 
@@ -183,7 +183,7 @@ fun foo() {}
 A `KNIT` directive can be used to trigger generation of an example file instead of providing a readable reference to a file. 
 In this case, only an example file name shall be specified (without a path).
 An example file will be written to the `knit.dir` [property](#knit-properties) directory. 
-The name of the file shall still match the `knit.pattern` [property](#knit-properties) pattern and 
+The name of the file shall still match the `knit.pattern` [property](#knit-properties) pattern, and 
 it will be automatically numbered as explained in the previous section. 
 For example: 
 
@@ -195,7 +195,7 @@ For example:
     
 #### Merging code pieces
 
-All tripple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when the next
+All triple-backquoted Kotlin sections are merged together and are output to the Kotlin source file when the next
 Knit pattern in encountered. This way, documentation can be written fluently, explaining
 functions as they are introduced. For example, the following markdown:
 
@@ -289,7 +289,7 @@ A single piece of code can be included into multiple examples (as opposed to the
 by specifying regex pattern of the example file name right after the `INCLUDE` directive as its parameter. 
 
 With the pattern the `INCLUDE` directive can also be specified on a single line, without the
-code inside of it. In this case, the code to be included is taken from the previously tripple-backquoted
+code inside it. In this case, the code to be included is taken from the previously triple-backquoted
 Kotlin source code before it. This way, the code snippet can be introduced and shown to the reader of
 the documentation and then included into the several subsequent examples.  
 
@@ -362,7 +362,7 @@ test.package=com.example.test
 Here `test.dir` specified the directory where the Kotlin test code is generated too and `test.package` specifies
 the package. In the beginning of the markdown file you specify the name of the test using `TEST_NAME` directive.
 There is one test file per the source markdown file with a test-case for each example. After the example
-you can place the expected output of the test in tripple-quoted `text` block and add `TEST` directive after
+you can place the expected output of the test in triple-quoted `text` block and add `TEST` directive after
 it to get the test-case added. For example:
 
     <!--- TEST_NAME BasicTest --> 
@@ -455,7 +455,7 @@ console. By tweaking the template you can test other kinds of examples in your m
 
 ### Kotlin Source Comments
 
-Knit directives and other Knit-recognized markdown markup can be embedded into documentation of 
+Knit directives and other Knit-recognized Markdown markup can be embedded into documentation of 
 Kotlin source (`.kt`/`.kts`) files. There are several ways to embed Knit markup into Kotlin sources.
 
 Knit markup can be nested inside regular /* ... */ comment block, directives starting at the beginning of the line.
@@ -529,7 +529,7 @@ knitPrepare.dependsOn rootProject.getTasksByName("dokka", true)
 
 The modules providing APIs can be stored in separate directories named after the module name. For example,
 this project has [`kotlinx-knit-test`](kotlinx-knit-test) module in a separate directory. You can reference
-functions and classes declared there using a regular markdown link syntax and give instructions to Knit 
+functions and classes declared there using a regular Markdown link syntax and give instructions to Knit 
 tool to expand those links like this:
 
     Here is a link to [captureOutput] function.
