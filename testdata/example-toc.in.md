@@ -23,6 +23,6 @@ this is the body
 
 ##### Extreme h5
 
-## Note: +some chars are {dropped} from the *link!
+## Note: +some chars are {dropped} "from" the *link!
 
 ### See [`skippedTocSymbols`] in \src/ code(,) for a #full list.

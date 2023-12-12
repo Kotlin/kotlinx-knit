@@ -10,7 +10,7 @@
   * [Final](#final)
     * [This is h4](#this-is-h4)
       * [Extreme h5](#extreme-h5)
-* [Note: +some chars are {dropped} from the *link!](#note-some-chars-are-dropped-from-the-link)
+* [Note: +some chars are {dropped} "from" the *link!](#note-some-chars-are-dropped-from-the-link)
   * [See [`skippedTocSymbols`] in \src/ code(,) for a #full list.](#see-skippedtocsymbols-in-src-code-for-a-full-list)
 
 <!--- END -->
