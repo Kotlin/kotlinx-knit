@@ -102,8 +102,12 @@ gradlePlugin {
 val publishPlugins by tasks.getting(PublishTask::class)
 
 val deploy: Task by tasks.creating {
-    dependsOn(getTasksByName("publish", true))
-    dependsOn(publishPlugins)
+    doFirst {
+        error(":deploy task is no longer works. " +
+                "To publish the plugin create and upload a deployment bundle by running " +
+                ":publishAllPublicationsToBuildRepoRepository and the archiving the contents of build/repo. " +
+                "To publish a plugin to the Gradle portal, run :publishPlugins task.")
+    }
 }
 
 val freemarkerVersion: String by project
