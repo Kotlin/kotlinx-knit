@@ -66,7 +66,9 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
+            // Don't setup empty sources and javadoc jars for the plugin publication,
+            // plugin-publish plugin will do that on its own.
+            // mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
     }
     mavenCentralMetadata()
@@ -85,6 +87,11 @@ extensions.getByType(PluginBundleExtension::class).apply {
     website = "https://github.com/Kotlin/kotlinx-knit"
     vcsUrl = "https://github.com/Kotlin/kotlinx-knit"
     tags = listOf("kotlin", "documentation", "markdown")
+}
+
+signing {
+    // disable signing if a private key isn't passed
+    isRequired = findProperty("libs.sign.key.private") != null
 }
 
 gradlePlugin {
