@@ -21,8 +21,7 @@ which are committed to the VCS. The overall workflow is:
 4. Generated files are automatically verified on subsequent project builds.
 
 Knit does not really parse markdown format or HTML, but understands certain Knit markup patterns and _directives_.
-Directives in markdown files must always start at the beginning of the line and have the following general format for
-single-line directives:
+Directives in markdown files have the following general format for single-line directives:
 
     <!--- <directive> [<parameters>] -->
 
@@ -36,6 +35,18 @@ Directives look like HTML comments, so their contents are not visible when the m
 regular tools. Specific markup patterns and directives supported by Knit are explained in the [Features](#features) section.
 For inclusion of directives into Kotlin source (`.kt`/`.kts`) files see 
 the [Kotlin Source Comments](#kotlin-source-comments) section.  
+
+> Note: In Markdown, directives can be indented to fit list items and other indented elements without breaking the layout.
+> For example, inside a list item:
+>
+> 1. Step text
+>    
+>    ```kotlin
+>    println("Hi")
+>    ```
+>    <!--- KNIT example-print-01.kt -->
+>
+> 2. Next step
 
 ## Contents
 

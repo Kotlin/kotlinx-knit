@@ -568,7 +568,7 @@ enum class InputFileType(
     val directivePrefix: List<String> = emptyList(),
     val ignoreTextRefs: Boolean = false
 ) {
-    MARKDOWN(".md"),
+    MARKDOWN(".md", skipWhitespace),
     KOTLIN(".kt", skipWhitespace, kotlinCommentPrefixes, ignoreTextRefs = true),
     KOTLIN_SCRIPT(".kts", skipWhitespace, kotlinCommentPrefixes, ignoreTextRefs = true),
     UNKNOWN("") // works just like MARKDOWN
@@ -584,7 +584,7 @@ fun InputFileType.lineStartIndex(line: String): Int {
             return startIndex + prefix.length
         }
     }
-    return 0
+    return startIndex
 }
 
 fun directive(line: String, startIndex: Int): Directive? {
