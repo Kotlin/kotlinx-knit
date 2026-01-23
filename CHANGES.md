@@ -1,5 +1,9 @@
 # Change log for kotlinx-knit
 
+## Version 0.5.1
+
+* Allow indented knit directives (#62).
+
 ## Version 0.5.0
 
 * Dokka and Kotlin updated to 1.9.10 and 1.9.21.
