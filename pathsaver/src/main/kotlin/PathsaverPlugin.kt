@@ -23,6 +23,7 @@ import org.jetbrains.dokka.templates.TemplatingPlugin
 import org.jetbrains.dokka.transformers.documentation.DocumentableTransformer
 import org.jetbrains.dokka.transformers.pages.PageTransformer
 import java.io.File
+import java.net.URI
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 
@@ -201,7 +202,7 @@ class LinkIndexTemplateProcessingStrategy(private val context: DokkaContext) : T
         }
     }
 
-    private fun String.isURL() = runCatching { URL(this) }.isSuccess
+    private fun String.isURL() = runCatching { URI(this).toURL() }.isSuccess
     private fun fallbackToCopy(input: File, output: File) {
         context.logger.warn("Falling back to just copying file for ${input.name} even thought it should process it")
         input.copyTo(output, overwrite = true)
