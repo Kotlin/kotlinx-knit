@@ -66,7 +66,9 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            mavenCentralArtifacts(project, project.sourceSets.main.allSource)
+            // Don't setup empty sources and javadoc jars for the plugin publication,
+            // plugin-publish plugin will do that on its own.
+            // mavenCentralArtifacts(project, project.sourceSets.main.allSource)
         }
     }
     mavenCentralMetadata()
@@ -87,6 +89,11 @@ extensions.getByType(PluginBundleExtension::class).apply {
     tags = listOf("kotlin", "documentation", "markdown")
 }
 
+signing {
+    // disable signing if a private key isn't passed
+    isRequired = findProperty("libs.sign.key.private") != null
+}
+
 gradlePlugin {
     plugins {
         create("kotlinx-knit") {
@@ -102,8 +109,12 @@ gradlePlugin {
 val publishPlugins by tasks.getting(PublishTask::class)
 
 val deploy: Task by tasks.creating {
-    dependsOn(getTasksByName("publish", true))
-    dependsOn(publishPlugins)
+    doFirst {
+        error(":deploy task is no longer works. " +
+                "To publish the plugin create and upload a deployment bundle by running " +
+                ":publishAllPublicationsToBuildRepoRepository and the archiving the contents of build/repo. " +
+                "To publish a plugin to the Gradle portal, run :publishPlugins task.")
+    }
 }
 
 val freemarkerVersion: String by project

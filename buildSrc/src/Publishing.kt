@@ -7,6 +7,7 @@ package kotlinx.knit.build
 import org.gradle.api.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
+import org.gradle.kotlin.dsl.maven
 import org.gradle.plugins.signing.*
 import java.net.*
 
@@ -19,6 +20,9 @@ fun PublishingExtension.mavenRepositoryPublishing(project: Project) {
                 username = project.getSensitiveProperty("libs.sonatype.user")
                 password = project.getSensitiveProperty("libs.sonatype.password")
             }
+        }
+        maven(project.rootProject.layout.buildDirectory.dir("repo")) {
+            name = "buildRepo"
         }
     }
 }
