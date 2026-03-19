@@ -24,7 +24,6 @@ import org.jetbrains.dokka.transformers.documentation.DocumentableTransformer
 import org.jetbrains.dokka.transformers.pages.PageTransformer
 import java.io.File
 import java.net.URI
-import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 
 const val LINK_INDEX_FILE = "paths-index.json"

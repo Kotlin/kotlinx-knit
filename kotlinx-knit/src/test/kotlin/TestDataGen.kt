@@ -9,8 +9,8 @@ import java.nio.file.*
 import kotlin.streams.*
 import kotlin.test.*
 
-private val TEST_DATA_DIR = Paths.get("testdata")
-private val TEST_KT = Paths.get("test", "TestDataTest.kt")
+private val TEST_DATA_DIR = Paths.get("../testdata")
+private val TEST_KT = Paths.get("src/test/kotlin/TestDataTest.kt")
 private const val PROPERTIES_SUFFIX = ".properties"
 
 private enum class TestCaseType(val inSuffix: String, val outSuffix: String) {

@@ -1,17 +1,14 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.knit.test
 
 import org.junit.Test
-import kotlin.random.*
-import kotlin.test.*
+import kotlin.random.Random
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class DiffTest {
     private fun compute(oldLines: List<String>, newLines: List<String>): String? =
         computeLinesDiff(oldLines, newLines).diff?.joinToString("\n")
-    
+
     @Test
     fun testDiffSame() {
         assertEquals(
