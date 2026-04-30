@@ -14,13 +14,6 @@ import java.net.*
 
 fun PublishingExtension.mavenRepositoryPublishing(project: Project) {
     repositories {
-        maven {
-            url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = project.getSensitiveProperty("libs.sonatype.user")
-                password = project.getSensitiveProperty("libs.sonatype.password")
-            }
-        }
         maven(project.rootProject.layout.buildDirectory.dir("repo")) {
             name = "buildRepo"
         }
