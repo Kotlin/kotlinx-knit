@@ -537,7 +537,7 @@ private fun requireSingleLine(directive: Directive) {
     require(directive.singleLine) { "${directive.name} directive must end on the same line with '$DIRECTIVE_END'" }
 }
 
-private const val skippedTocSymbols = "\\,`*{}[]()/#+.!:"
+private const val skippedTocSymbols = "\\,`*{}[]()/#+.!:\""
 
 fun makeSectionRef(name: String): String = name
     .replace(' ', '-')
