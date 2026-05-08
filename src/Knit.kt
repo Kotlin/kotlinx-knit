@@ -294,6 +294,7 @@ fun KnitContext.knit(inputFile: File): Boolean {
                     requireSingleLine(directive)
                     require(directive.param.isEmpty()) { "$CLEAR_DIRECTIVE directive must not have parameters" }
                     codeLines.clear()
+                    testLines.clear()
                     continue@mainLoop
                 }
                 KNIT_DIRECTIVE -> {
